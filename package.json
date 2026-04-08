@@ -1,0 +1,13 @@
+{
+  "name": "groundlink-safety-dashboard",
+  "version": "1.0.0",
+  "description": "Groundlink III Safety Dashboard with Smartsheet integration",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

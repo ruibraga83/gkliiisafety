@@ -12,268 +12,186 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
 
         :root {
-            --color-primary: #6366f1;
-            --color-primary-dark: #4f46e5;
+            --color-primary:       #6366f1;
+            --color-primary-dark:  #4f46e5;
             --color-primary-light: #818cf8;
-            --color-secondary: #8b5cf6;
-            --color-success: #10b981;
-            --color-warning: #f59e0b;
-            --color-danger: #ef4444;
-            --color-info: #3b82f6;
-            --color-bg: #f8fafc;
-            --color-surface: #ffffff;
+            --color-success:  #10b981;
+            --color-warning:  #f59e0b;
+            --color-danger:   #ef4444;
+            --color-info:     #3b82f6;
+            --color-bg:            #f8fafc;
+            --color-surface:       #ffffff;
             --color-surface-hover: #f1f5f9;
-            --color-text: #0f172a;
-            --color-text-secondary: #64748b;
-            --color-text-muted: #94a3b8;
-            --color-border: #e2e8f0;
-            --color-border-light: #f1f5f9;
-            --severity-critical: #ef4444;
-            --severity-high: #f97316;
-            --severity-medium: #f59e0b;
-            --severity-low: #84cc16;
-            --status-open: #3b82f6;
-            --status-inprogress: #f59e0b;
-            --status-closed: #10b981;
-            --spacing-xs: 0.25rem;
-            --spacing-sm: 0.5rem;
-            --spacing-md: 1rem;
-            --spacing-lg: 1.5rem;
-            --spacing-xl: 2rem;
-            --spacing-2xl: 3rem;
-            --radius-sm: 0.375rem;
-            --radius-md: 0.5rem;
-            --radius-lg: 0.75rem;
-            --radius-xl: 1rem;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
-            --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+            --color-text:          #0f172a;
+            --color-text-secondary:#64748b;
+            --color-text-muted:    #94a3b8;
+            --color-border:        #e2e8f0;
+            --color-border-light:  #f1f5f9;
+            /* risk / severity */
+            --sev-critical: #dc2626;
+            --sev-high:     #ea580c;
+            --sev-medium:   #d97706;
+            --sev-low:      #65a30d;
+            --sev-negligible:#6b7280;
+            /* status */
+            --st-open:       #2563eb;
+            --st-inprogress: #d97706;
+            --st-closed:     #059669;
+            /* spacing */
+            --s-xs:.25rem; --s-sm:.5rem; --s-md:1rem; --s-lg:1.5rem; --s-xl:2rem; --s-2xl:3rem;
+            --r-sm:.375rem; --r-md:.5rem; --r-lg:.75rem; --r-xl:1rem;
+            --sh-sm:0 1px 2px rgba(0,0,0,.05);
+            --sh-md:0 4px 6px -1px rgba(0,0,0,.1);
+            --sh-lg:0 10px 15px -3px rgba(0,0,0,.1);
+            --sh-xl:0 20px 25px -5px rgba(0,0,0,.1);
+            --tr:all .2s cubic-bezier(.4,0,.2,1);
         }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
+        body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--color-bg); color:var(--color-text); line-height:1.6; overflow-x:hidden; }
+        .app-container { display:flex; min-height:100vh; }
 
-        .app-container { display: flex; min-height: 100vh; }
+        /* ── SIDEBAR ─────────────────────────────────────── */
+        .sidebar { width:260px; background:var(--color-surface); border-right:1px solid var(--color-border); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; box-shadow:var(--sh-sm); }
+        .sidebar-header { padding:var(--s-lg); border-bottom:1px solid var(--color-border-light); }
+        .logo-container { display:flex; align-items:center; gap:var(--s-md); }
+        .logo-container img { height:40px; width:auto; }
+        .logo-text { font-size:1.125rem; font-weight:700; color:var(--color-text); }
+        .sidebar-nav { flex:1; padding:var(--s-md); overflow-y:auto; }
+        .nav-section { margin-bottom:var(--s-lg); }
+        .nav-section-title { font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--color-text-muted); padding:0 var(--s-md); margin-bottom:var(--s-sm); }
+        .nav-item { display:flex; align-items:center; gap:var(--s-md); padding:var(--s-md); border-radius:var(--r-md); color:var(--color-text-secondary); text-decoration:none; transition:var(--tr); cursor:pointer; margin-bottom:var(--s-xs); }
+        .nav-item:hover { background:var(--color-surface-hover); color:var(--color-primary); }
+        .nav-item.active { background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark)); color:white; box-shadow:var(--sh-md); }
+        .nav-item i { width:20px; text-align:center; }
+        .airport-list { display:flex; flex-direction:column; gap:var(--s-xs); }
+        .airport-btn { display:flex; align-items:center; justify-content:space-between; padding:var(--s-md); border-radius:var(--r-md); background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text-secondary); cursor:pointer; transition:var(--tr); font-size:.875rem; }
+        .airport-btn:hover { border-color:var(--color-primary); background:var(--color-surface-hover); transform:translateX(4px); }
+        .airport-btn.active { background:linear-gradient(135deg,var(--color-primary-light),var(--color-primary)); color:white; border-color:var(--color-primary); box-shadow:var(--sh-md); }
+        .airport-code { font-weight:600; }
 
-        /* ── SIDEBAR ── */
-        .sidebar {
-            width: 260px;
-            background: var(--color-surface);
-            border-right: 1px solid var(--color-border);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0; left: 0;
-            height: 100vh;
-            z-index: 100;
-            box-shadow: var(--shadow-sm);
-        }
-        .sidebar-header {
-            padding: var(--spacing-lg);
-            border-bottom: 1px solid var(--color-border-light);
-        }
-        .logo-container { display: flex; align-items: center; gap: var(--spacing-md); }
-        .logo-container img { height: 40px; width: auto; }
-        .logo-text { font-size: 1.125rem; font-weight: 700; color: var(--color-text); }
-        .sidebar-nav { flex: 1; padding: var(--spacing-md); overflow-y: auto; }
-        .nav-section { margin-bottom: var(--spacing-lg); }
-        .nav-section-title {
-            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--color-text-muted);
-            padding: 0 var(--spacing-md); margin-bottom: var(--spacing-sm);
-        }
-        .nav-item {
-            display: flex; align-items: center; gap: var(--spacing-md);
-            padding: var(--spacing-md); border-radius: var(--radius-md);
-            color: var(--color-text-secondary); text-decoration: none;
-            transition: var(--transition); cursor: pointer;
-            margin-bottom: var(--spacing-xs);
-        }
-        .nav-item:hover { background: var(--color-surface-hover); color: var(--color-primary); }
-        .nav-item.active {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-            color: white; box-shadow: var(--shadow-md);
-        }
-        .nav-item i { width: 20px; text-align: center; }
-        .airport-list { display: flex; flex-direction: column; gap: var(--spacing-xs); }
-        .airport-btn {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: var(--spacing-md); border-radius: var(--radius-md);
-            background: var(--color-surface); border: 1px solid var(--color-border);
-            color: var(--color-text-secondary); cursor: pointer;
-            transition: var(--transition); font-size: 0.875rem;
-        }
-        .airport-btn:hover {
-            border-color: var(--color-primary);
-            background: var(--color-surface-hover);
-            transform: translateX(4px);
-        }
-        .airport-btn.active {
-            background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
-            color: white; border-color: var(--color-primary);
-            box-shadow: var(--shadow-md);
-        }
-        .airport-code { font-weight: 600; }
+        /* ── MAIN ────────────────────────────────────────── */
+        .main-content { margin-left:260px; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+        .topbar { background:var(--color-surface); border-bottom:1px solid var(--color-border); padding:var(--s-lg) var(--s-xl); display:flex; justify-content:space-between; align-items:center; box-shadow:var(--sh-sm); position:sticky; top:0; z-index:50; }
+        .topbar-left h1 { font-size:1.5rem; font-weight:700; }
+        .topbar-subtitle { font-size:.875rem; color:var(--color-text-muted); margin-top:var(--s-xs); }
+        .topbar-actions { display:flex; gap:var(--s-md); }
+        .btn { padding:var(--s-sm) var(--s-lg); border-radius:var(--r-md); border:none; cursor:pointer; font-weight:500; font-size:.875rem; transition:var(--tr); display:inline-flex; align-items:center; gap:var(--s-sm); }
+        .btn-primary { background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark)); color:white; box-shadow:var(--sh-md); }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:var(--sh-lg); }
+        .btn-secondary { background:var(--color-surface); color:var(--color-text-secondary); border:1px solid var(--color-border); }
+        .btn-secondary:hover { background:var(--color-surface-hover); border-color:var(--color-primary); }
 
-        /* ── MAIN ── */
-        .main-content { margin-left: 260px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-        .topbar {
-            background: var(--color-surface);
-            border-bottom: 1px solid var(--color-border);
-            padding: var(--spacing-lg) var(--spacing-xl);
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 50;
-        }
-        .topbar-left h1 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
-        .topbar-subtitle { font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--spacing-xs); }
-        .topbar-actions { display: flex; gap: var(--spacing-md); }
-        .btn {
-            padding: var(--spacing-sm) var(--spacing-lg);
-            border-radius: var(--radius-md); border: none; cursor: pointer;
-            font-weight: 500; font-size: 0.875rem; transition: var(--transition);
-            display: inline-flex; align-items: center; gap: var(--spacing-sm);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-            color: white; box-shadow: var(--shadow-md);
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-        .btn-secondary {
-            background: var(--color-surface); color: var(--color-text-secondary);
-            border: 1px solid var(--color-border);
-        }
-        .btn-secondary:hover { background: var(--color-surface-hover); border-color: var(--color-primary); }
+        /* ── CONTENT / PAGES ─────────────────────────────── */
+        .content { padding:var(--s-xl); flex:1; }
+        .page { display:none; }
+        .page.active { display:block; animation:fadeIn .3s ease-in; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-        /* ── CONTENT ── */
-        .content { padding: var(--spacing-xl); flex: 1; }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        /* ── FILTER BAR ──────────────────────────────────── */
+        .filter-bar { background:var(--color-surface); padding:var(--s-lg); border-radius:var(--r-lg); margin-bottom:var(--s-xl); box-shadow:var(--sh-sm); border:1px solid var(--color-border); }
+        .filter-group { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:var(--s-md); }
+        .filter-item label { display:block; font-size:.875rem; font-weight:500; color:var(--color-text-secondary); margin-bottom:var(--s-sm); }
+        .filter-item select { width:100%; padding:var(--s-sm) var(--s-md); border:1px solid var(--color-border); border-radius:var(--r-md); background:var(--color-surface); color:var(--color-text); font-size:.875rem; transition:var(--tr); }
+        .filter-item select:focus { outline:none; border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
 
-        /* ── FILTERS ── */
-        .filter-bar {
-            background: var(--color-surface); padding: var(--spacing-lg);
-            border-radius: var(--radius-lg); margin-bottom: var(--spacing-xl);
-            box-shadow: var(--shadow-sm); border: 1px solid var(--color-border);
-        }
-        .filter-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--spacing-md); }
-        .filter-item label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--color-text-secondary); margin-bottom: var(--spacing-sm); }
-        .filter-item select {
-            width: 100%; padding: var(--spacing-sm) var(--spacing-md);
-            border: 1px solid var(--color-border); border-radius: var(--radius-md);
-            background: var(--color-surface); color: var(--color-text); font-size: 0.875rem; transition: var(--transition);
-        }
-        .filter-item select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        /* ── KPI CARDS ───────────────────────────────────── */
+        .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:var(--s-lg); margin-bottom:var(--s-xl); }
+        .kpi-card { background:var(--color-surface); padding:var(--s-lg); border-radius:var(--r-lg); box-shadow:var(--sh-md); border:1px solid var(--color-border); transition:var(--tr); position:relative; overflow:hidden; }
+        .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--kpi-color,var(--color-primary)) 0%,transparent 100%); }
+        .kpi-card:hover { transform:translateY(-4px); box-shadow:var(--sh-xl); }
+        .kpi-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:var(--s-md); }
+        .kpi-icon { width:48px; height:48px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:1.25rem; background:var(--kpi-bg,rgba(99,102,241,.1)); color:var(--kpi-color,var(--color-primary)); }
+        .kpi-title { font-size:.875rem; color:var(--color-text-secondary); font-weight:500; }
+        .kpi-value { font-size:2rem; font-weight:700; margin-bottom:var(--s-sm); }
+        .kpi-footer { font-size:.75rem; color:var(--color-text-muted); }
 
-        /* ── KPI CARDS ── */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-xl); }
-        .kpi-card {
-            background: var(--color-surface); padding: var(--spacing-lg);
-            border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
-            border: 1px solid var(--color-border); transition: var(--transition);
-            position: relative; overflow: hidden;
-        }
-        .kpi-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--kpi-color, var(--color-primary)) 0%, transparent 100%);
-        }
-        .kpi-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
-        .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md); }
-        .kpi-icon {
-            width: 48px; height: 48px; border-radius: var(--radius-md);
-            display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
-            background: var(--kpi-bg, rgba(99,102,241,0.1)); color: var(--kpi-color, var(--color-primary));
-        }
-        .kpi-title { font-size: 0.875rem; color: var(--color-text-secondary); font-weight: 500; }
-        .kpi-value { font-size: 2rem; font-weight: 700; color: var(--color-text); margin-bottom: var(--spacing-sm); }
-        .kpi-footer { font-size: 0.75rem; color: var(--color-text-muted); }
+        /* ── CHARTS ──────────────────────────────────────── */
+        .chart-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:var(--s-lg); margin-bottom:var(--s-xl); }
+        .chart-card { background:var(--color-surface); padding:var(--s-lg); border-radius:var(--r-lg); box-shadow:var(--sh-md); border:1px solid var(--color-border); }
+        .chart-card.full-width { grid-column:1/-1; }
+        .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--s-lg); }
+        .chart-title { font-size:1.125rem; font-weight:600; }
+        .chart-subtitle { font-size:.875rem; color:var(--color-text-muted); margin-top:var(--s-xs); }
+        .chart-body { position:relative; height:300px; }
+        .chart-card.tall .chart-body { height:400px; }
 
-        /* ── CHARTS ── */
-        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-xl); }
-        .chart-card { background: var(--color-surface); padding: var(--spacing-lg); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-border); }
-        .chart-card.full-width { grid-column: 1 / -1; }
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg); }
-        .chart-title { font-size: 1.125rem; font-weight: 600; color: var(--color-text); }
-        .chart-subtitle { font-size: 0.875rem; color: var(--color-text-muted); margin-top: var(--spacing-xs); }
-        .chart-body { position: relative; height: 300px; }
-        .chart-card.tall .chart-body { height: 400px; }
+        /* ── TABLES ──────────────────────────────────────── */
+        .table-container { background:var(--color-surface); border-radius:var(--r-lg); box-shadow:var(--sh-md); border:1px solid var(--color-border); overflow:hidden; margin-bottom:var(--s-xl); }
+        .table-header { padding:var(--s-lg); border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--s-md); }
+        .table-title { font-size:1.125rem; font-weight:600; }
+        .table-search { position:relative; }
+        .table-search input { padding:var(--s-sm) var(--s-md) var(--s-sm) 2.5rem; border:1px solid var(--color-border); border-radius:var(--r-md); font-size:.875rem; width:240px; }
+        .table-search i { position:absolute; left:var(--s-md); top:50%; transform:translateY(-50%); color:var(--color-text-muted); }
+        .data-table { width:100%; border-collapse:collapse; }
+        .data-table thead { background:var(--color-surface-hover); border-bottom:1px solid var(--color-border); }
+        .data-table th { padding:var(--s-md); text-align:left; font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--color-text-secondary); white-space:nowrap; }
+        .data-table td { padding:var(--s-md); border-bottom:1px solid var(--color-border-light); font-size:.875rem; vertical-align:middle; }
+        .data-table tbody tr:hover { background:var(--color-surface-hover); }
+        .col-inc  { width:90px; }
+        .col-date { width:100px; white-space:nowrap; }
+        .col-air  { width:70px; }
+        .col-risk { width:110px; }
+        .col-stat { width:110px; }
+        .col-sum  { min-width:180px; max-width:260px; }
+        .td-ellipsis { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; display:block; }
 
-        /* ── TABLES ── */
-        .table-container { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--color-border); overflow: hidden; margin-bottom: var(--spacing-xl); }
-        .table-header { padding: var(--spacing-lg); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md); }
-        .table-title { font-size: 1.125rem; font-weight: 600; color: var(--color-text); }
-        .table-search { position: relative; }
-        .table-search input { padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 2.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 0.875rem; width: 250px; }
-        .table-search i { position: absolute; left: var(--spacing-md); top: 50%; transform: translateY(-50%); color: var(--color-text-muted); }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table thead { background: var(--color-surface-hover); border-bottom: 1px solid var(--color-border); }
-        .data-table th { padding: var(--spacing-md); text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); white-space: nowrap; }
-        .data-table td { padding: var(--spacing-md); border-bottom: 1px solid var(--color-border-light); font-size: 0.875rem; }
-        .data-table tbody tr { transition: var(--transition); }
-        .data-table tbody tr:hover { background: var(--color-surface-hover); }
-        .td-wrap { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* ── BADGES ──────────────────────────────────────── */
+        .badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:9999px; font-size:.72rem; font-weight:600; white-space:nowrap; }
+        /* risk / severity */
+        .badge.sev-critical   { background:rgba(220,38,38,.12);   color:var(--sev-critical); }
+        .badge.sev-high       { background:rgba(234,88,12,.12);    color:var(--sev-high); }
+        .badge.sev-medium     { background:rgba(217,119,6,.12);    color:var(--sev-medium); }
+        .badge.sev-low        { background:rgba(101,163,13,.12);   color:var(--sev-low); }
+        .badge.sev-negligible { background:rgba(107,114,128,.12);  color:var(--sev-negligible); }
+        .badge.sev-unknown    { background:rgba(148,163,184,.12);  color:var(--color-text-muted); }
+        /* status */
+        .badge.st-open       { background:rgba(37,99,235,.1);  color:var(--st-open); }
+        .badge.st-inprogress { background:rgba(217,119,6,.1);  color:var(--st-inprogress); }
+        .badge.st-closed     { background:rgba(5,150,105,.1);  color:var(--st-closed); }
+        .badge.st-unknown    { background:rgba(148,163,184,.1);color:var(--color-text-muted); }
+        /* airport */
+        .badge.air { background:rgba(99,102,241,.1); color:var(--color-primary); font-size:.7rem; }
+        /* incident number */
+        .inc-no { font-size:.78rem; font-family:monospace; color:var(--color-text-secondary); font-weight:600; background:var(--color-surface-hover); padding:2px 6px; border-radius:var(--r-sm); white-space:nowrap; }
 
-        /* ── BADGES ── */
-        .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; text-transform: capitalize; white-space: nowrap; }
-        .badge.status-open { background: rgba(59,130,246,0.1); color: var(--status-open); }
-        .badge.status-inprogress { background: rgba(245,158,11,0.1); color: var(--status-inprogress); }
-        .badge.status-closed { background: rgba(16,185,129,0.1); color: var(--status-closed); }
-        .badge.status-unknown { background: rgba(148,163,184,0.1); color: var(--color-text-muted); }
-        .badge.severity-critical { background: rgba(239,68,68,0.1); color: var(--severity-critical); }
-        .badge.severity-high { background: rgba(249,115,22,0.1); color: var(--severity-high); }
-        .badge.severity-medium { background: rgba(245,158,11,0.1); color: var(--severity-medium); }
-        .badge.severity-low { background: rgba(132,204,22,0.1); color: var(--severity-low); }
-        .badge.severity-unknown { background: rgba(148,163,184,0.1); color: var(--color-text-muted); }
-        .badge.airport { background: rgba(99,102,241,0.1); color: var(--color-primary); font-size: 0.7rem; }
+        /* ── RISK SCALE LEGEND ───────────────────────────── */
+        .risk-legend { display:flex; flex-wrap:wrap; gap:var(--s-sm); margin-bottom:var(--s-lg); padding:var(--s-md) var(--s-lg); background:var(--color-surface); border-radius:var(--r-lg); border:1px solid var(--color-border); box-shadow:var(--sh-sm); align-items:center; }
+        .risk-legend span { font-size:.78rem; font-weight:500; color:var(--color-text-secondary); margin-right:var(--s-sm); }
+        .risk-legend-item { display:flex; align-items:center; gap:4px; font-size:.75rem; color:var(--color-text-secondary); }
+        .risk-dot { width:10px; height:10px; border-radius:50%; }
 
-        /* ── SPLASH / SETUP ── */
-        .splash-screen {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999; color: white;
-        }
-        .splash-screen img { height: 80px; margin-bottom: var(--spacing-xl); animation: pulse 2s ease-in-out infinite; }
-        @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
-        .splash-screen .loading-text { font-size: 1.25rem; font-weight: 600; margin-bottom: var(--spacing-md); }
-        .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 1s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        .setup-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center; z-index: 9998;
-        }
-        .setup-modal { background: var(--color-surface); padding: var(--spacing-2xl); border-radius: var(--radius-xl); max-width: 500px; width: 90%; box-shadow: var(--shadow-xl); }
-        .setup-modal h2 { font-size: 1.5rem; margin-bottom: var(--spacing-md); color: var(--color-text); }
-        .setup-modal p { color: var(--color-text-secondary); margin-bottom: var(--spacing-xl); }
-        .setup-modal input { width:100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
-        .setup-modal button { width:100%; padding: var(--spacing-md); background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color:white; border:none; border-radius: var(--radius-md); font-weight:600; cursor:pointer; transition: var(--transition); }
-        .setup-modal button:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        /* ── SPLASH / SETUP ──────────────────────────────── */
+        .splash-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark)); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; color:white; }
+        .splash-screen img { height:80px; margin-bottom:var(--s-xl); animation:pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+        .splash-screen .loading-text { font-size:1.25rem; font-weight:600; margin-bottom:var(--s-md); }
+        .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:spin 1s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .setup-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.7); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:9998; }
+        .setup-modal { background:var(--color-surface); padding:var(--s-2xl); border-radius:var(--r-xl); max-width:500px; width:90%; box-shadow:var(--sh-xl); }
+        .setup-modal h2 { font-size:1.5rem; margin-bottom:var(--s-md); }
+        .setup-modal p { color:var(--color-text-secondary); margin-bottom:var(--s-xl); }
+        .setup-modal input { width:100%; padding:var(--s-md); border:1px solid var(--color-border); border-radius:var(--r-md); font-size:.875rem; margin-bottom:var(--s-lg); }
+        .setup-modal button { width:100%; padding:var(--s-md); background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark)); color:white; border:none; border-radius:var(--r-md); font-weight:600; cursor:pointer; transition:var(--tr); }
+        .setup-modal button:hover { transform:translateY(-2px); box-shadow:var(--sh-lg); }
 
-        /* ── DEBUG ── */
-        .debug-panel { position:fixed; bottom: var(--spacing-lg); right: var(--spacing-lg); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-md); max-width:350px; max-height:500px; overflow-y:auto; box-shadow: var(--shadow-xl); font-size:0.75rem; z-index:1000; display:none; }
+        /* ── DEBUG ───────────────────────────────────────── */
+        .debug-panel { position:fixed; bottom:var(--s-lg); right:var(--s-lg); background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--r-lg); padding:var(--s-md); max-width:340px; max-height:480px; overflow-y:auto; box-shadow:var(--sh-xl); font-size:.75rem; z-index:1000; display:none; }
         .debug-panel.active { display:block; }
-        .debug-panel h4 { font-size:0.875rem; margin-bottom: var(--spacing-sm); color: var(--color-text); }
+        .debug-panel h4 { font-size:.875rem; margin-bottom:var(--s-sm); }
         .debug-panel ul { list-style:none; }
-        .debug-panel li { padding: var(--spacing-xs) 0; color: var(--color-text-secondary); word-break:break-all; }
+        .debug-panel li { padding:2px 0; color:var(--color-text-secondary); word-break:break-all; }
 
-        /* ── EMPTY STATE ── */
-        .empty-state { text-align:center; padding: var(--spacing-2xl); color: var(--color-text-muted); }
-        .empty-state i { font-size:3rem; margin-bottom: var(--spacing-md); opacity:0.3; display:block; }
+        /* ── EMPTY STATE ─────────────────────────────────── */
+        .empty-state { text-align:center; padding:var(--s-2xl); color:var(--color-text-muted); }
+        .empty-state i { font-size:3rem; margin-bottom:var(--s-md); opacity:.3; display:block; }
 
-        /* ── RESPONSIVE ── */
-        @media (max-width: 1024px) { .sidebar { transform:translateX(-100%); } .main-content { margin-left:0; } .chart-grid { grid-template-columns:1fr; } }
-        @media (max-width: 768px) { .topbar { flex-direction:column; gap: var(--spacing-md); } .kpi-grid { grid-template-columns:1fr; } .filter-group { grid-template-columns:1fr; } }
+        /* ── RESPONSIVE ──────────────────────────────────── */
+        @media(max-width:1024px){ .sidebar{transform:translateX(-100%)} .main-content{margin-left:0} .chart-grid{grid-template-columns:1fr} }
+        @media(max-width:768px){ .topbar{flex-direction:column;gap:var(--s-md)} .kpi-grid{grid-template-columns:1fr} .filter-group{grid-template-columns:1fr} }
     </style>
 </head>
 <body>
@@ -281,12 +199,12 @@
 <!-- Splash -->
 <div class="splash-screen" id="splashScreen">
     <img src="logo.png" alt="Groundlink III">
-    <div class="loading-text">Loading Safety Dashboard...</div>
+    <div class="loading-text">Loading Safety Dashboard…</div>
     <div class="spinner"></div>
 </div>
 
 <!-- Setup -->
-<div class="setup-overlay" id="setupOverlay" style="display:none;">
+<div class="setup-overlay" id="setupOverlay" style="display:none">
     <div class="setup-modal">
         <h2><i class="fas fa-key"></i> Enter API Token</h2>
         <p>Enter your Smartsheet API token to connect to the dashboard.</p>
@@ -296,7 +214,8 @@
 </div>
 
 <div class="app-container">
-    <!-- Sidebar -->
+
+    <!-- ── SIDEBAR ── -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
@@ -307,11 +226,11 @@
         <nav class="sidebar-nav">
             <div class="nav-section">
                 <div class="nav-section-title">Navigation</div>
-                <a class="nav-item active" data-page="network"><i class="fas fa-globe"></i><span>Portugal Network</span></a>
-                <a class="nav-item" data-page="dashboard"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
-                <a class="nav-item" data-page="trends"><i class="fas fa-chart-area"></i><span>Trends</span></a>
-                <a class="nav-item" data-page="categories"><i class="fas fa-layer-group"></i><span>Categories</span></a>
-                <a class="nav-item" data-page="records"><i class="fas fa-table"></i><span>All Records</span></a>
+                <a class="nav-item active" data-page="network">  <i class="fas fa-globe"></i>      <span>Portugal Network</span></a>
+                <a class="nav-item"        data-page="dashboard"><i class="fas fa-chart-line"></i>  <span>Dashboard</span></a>
+                <a class="nav-item"        data-page="trends">   <i class="fas fa-chart-area"></i>  <span>Trends</span></a>
+                <a class="nav-item"        data-page="categories"><i class="fas fa-layer-group"></i><span>Categories</span></a>
+                <a class="nav-item"        data-page="records">  <i class="fas fa-table"></i>       <span>All Records</span></a>
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">Airports</div>
@@ -324,7 +243,7 @@
         </nav>
     </aside>
 
-    <!-- Main -->
+    <!-- ── MAIN ── -->
     <main class="main-content">
         <div class="topbar">
             <div class="topbar-left">
@@ -333,219 +252,280 @@
             </div>
             <div class="topbar-actions">
                 <button class="btn btn-secondary" onclick="toggleDebug()"><i class="fas fa-bug"></i> Debug</button>
-                <button class="btn btn-primary" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn btn-primary"   onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
         </div>
 
         <div class="content">
 
-            <!-- ═══════════ NETWORK PAGE ═══════════ -->
-            <div class="page active" id="page-network">
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <div class="filter-item"><label>Year</label><select id="netYear" onchange="applyPageFilters('network')"><option value="">All Years</option></select></div>
-                        <div class="filter-item"><label>Month</label><select id="netMonth" onchange="applyPageFilters('network')"><option value="">All Months</option></select></div>
-                        <div class="filter-item"><label>Category</label><select id="netCategory" onchange="applyPageFilters('network')"><option value="">All Categories</option></select></div>
-                        <div class="filter-item"><label>Sub-Category</label><select id="netSubCategory" onchange="applyPageFilters('network')"><option value="">All Sub-Categories</option></select></div>
-                        <div class="filter-item"><label>Severity</label><select id="netSeverity" onchange="applyPageFilters('network')"><option value="">All Severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
-                    </div>
-                </div>
+<!-- ═══════════ NETWORK ═══════════ -->
+<div class="page active" id="page-network">
 
-                <div class="kpi-grid">
-                    <div class="kpi-card" style="--kpi-color:var(--color-primary);--kpi-bg:rgba(99,102,241,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">Network Total</div><div class="kpi-value" id="netKpiTotal">0</div></div><div class="kpi-icon"><i class="fas fa-globe"></i></div></div>
-                        <div class="kpi-footer">All incidents across Portugal</div>
-                    </div>
-                    <div class="kpi-card" style="--kpi-color:var(--color-info);--kpi-bg:rgba(59,130,246,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">Open Cases</div><div class="kpi-value" id="netKpiOpen">0</div></div><div class="kpi-icon"><i class="fas fa-folder-open"></i></div></div>
-                        <div class="kpi-footer">Requires attention</div>
-                    </div>
-                    <div class="kpi-card" style="--kpi-color:var(--color-danger);--kpi-bg:rgba(239,68,68,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">High / Critical</div><div class="kpi-value" id="netKpiHigh">0</div></div><div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div></div>
-                        <div class="kpi-footer">Elevated risk incidents</div>
-                    </div>
-                    <div class="kpi-card" style="--kpi-color:var(--color-success);--kpi-bg:rgba(16,185,129,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">Closed This Month</div><div class="kpi-value" id="netKpiClosed">0</div></div><div class="kpi-icon"><i class="fas fa-check-circle"></i></div></div>
-                        <div class="kpi-footer">Resolved in current month</div>
-                    </div>
-                </div>
+    <div class="risk-legend">
+        <span>Risk Scale:</span>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#6b7280"></div> Negligible (1–10)</div>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#65a30d"></div> Low (11–49)</div>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#ea580c"></div> High (50–99)</div>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#dc2626"></div> Critical (100+)</div>
+    </div>
 
-                <div class="chart-grid">
-                    <div class="chart-card full-width">
-                        <div class="chart-header"><div><div class="chart-title">Incidents by Airport</div><div class="chart-subtitle">Distribution across all locations</div></div></div>
-                        <div class="chart-body"><canvas id="chartNetAirports"></canvas></div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header"><div class="chart-title">Network Categories</div></div>
-                        <div class="chart-body"><canvas id="chartNetCategories"></canvas></div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header"><div class="chart-title">Network Status</div></div>
-                        <div class="chart-body"><canvas id="chartNetStatus"></canvas></div>
-                    </div>
-                    <div class="chart-card full-width tall">
-                        <div class="chart-header"><div class="chart-title">Network Trend — Last 12 Months</div></div>
-                        <div class="chart-body"><canvas id="chartNetTrend"></canvas></div>
-                    </div>
-                </div>
+    <div class="filter-bar"><div class="filter-group">
+        <div class="filter-item"><label>Year</label>        <select id="netYear"        onchange="applyPageFilters('network')"><option value="">All Years</option></select></div>
+        <div class="filter-item"><label>Month</label>       <select id="netMonth"       onchange="applyPageFilters('network')"><option value="">All Months</option></select></div>
+        <div class="filter-item"><label>Category</label>    <select id="netCategory"    onchange="applyPageFilters('network')"><option value="">All Categories</option></select></div>
+        <div class="filter-item"><label>Sub-Category</label><select id="netSubCategory" onchange="applyPageFilters('network')"><option value="">All Sub-Categories</option></select></div>
+        <div class="filter-item"><label>Risk Level</label>  <select id="netSeverity"    onchange="applyPageFilters('network')">
+            <option value="">All Levels</option>
+            <option value="critical">Critical (100+)</option>
+            <option value="high">High (50–99)</option>
+            <option value="low">Low (11–49)</option>
+            <option value="negligible">Negligible (1–10)</option>
+        </select></div>
+    </div></div>
 
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">Network Incidents (<span id="netTableCount">0</span>)</div>
-                        <div class="table-search"><i class="fas fa-search"></i><input type="text" id="searchNet" placeholder="Search..." oninput="filterTable('netTableBody','searchNet')"></div>
-                    </div>
-                    <div style="overflow-x:auto">
-                        <table class="data-table">
-                            <thead><tr><th>#</th><th>Date</th><th>Airport</th><th>Category</th><th>Sub-Category</th><th>Risk Assessment</th><th>Status</th><th>Ground Event Summary</th></tr></thead>
-                            <tbody id="netTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="kpi-grid">
+        <div class="kpi-card" style="--kpi-color:var(--color-primary);--kpi-bg:rgba(99,102,241,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Network Total</div><div class="kpi-value" id="netKpiTotal">0</div></div><div class="kpi-icon"><i class="fas fa-globe"></i></div></div>
+            <div class="kpi-footer">All incidents across Portugal</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--color-info);--kpi-bg:rgba(59,130,246,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Open Cases</div><div class="kpi-value" id="netKpiOpen">0</div></div><div class="kpi-icon"><i class="fas fa-folder-open"></i></div></div>
+            <div class="kpi-footer">Requires attention</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--sev-critical);--kpi-bg:rgba(220,38,38,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Critical Risk</div><div class="kpi-value" id="netKpiCritical">0</div></div><div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div></div>
+            <div class="kpi-footer">Risk score ≥ 100</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--color-success);--kpi-bg:rgba(16,185,129,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Closed This Month</div><div class="kpi-value" id="netKpiClosed">0</div></div><div class="kpi-icon"><i class="fas fa-check-circle"></i></div></div>
+            <div class="kpi-footer">Resolved in current month</div>
+        </div>
+    </div>
 
-            <!-- ═══════════ DASHBOARD PAGE ═══════════ -->
-            <div class="page" id="page-dashboard">
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <div class="filter-item"><label>Year</label><select id="dashYear" onchange="applyPageFilters('dashboard')"><option value="">All Years</option></select></div>
-                        <div class="filter-item"><label>Month</label><select id="dashMonth" onchange="applyPageFilters('dashboard')"><option value="">All Months</option></select></div>
-                        <div class="filter-item"><label>Category</label><select id="dashCategory" onchange="applyPageFilters('dashboard')"><option value="">All Categories</option></select></div>
-                        <div class="filter-item"><label>Sub-Category</label><select id="dashSubCategory" onchange="applyPageFilters('dashboard')"><option value="">All Sub-Categories</option></select></div>
-                        <div class="filter-item"><label>Severity</label><select id="dashSeverity" onchange="applyPageFilters('dashboard')"><option value="">All Severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
-                    </div>
-                </div>
+    <div class="chart-grid">
+        <div class="chart-card full-width">
+            <div class="chart-header"><div><div class="chart-title">Incidents by Airport</div><div class="chart-subtitle">Distribution across all locations</div></div></div>
+            <div class="chart-body"><canvas id="chartNetAirports"></canvas></div>
+        </div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Network Categories</div></div><div class="chart-body"><canvas id="chartNetCategories"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Risk Level Distribution</div></div><div class="chart-body"><canvas id="chartNetRisk"></canvas></div></div>
+        <div class="chart-card full-width tall">
+            <div class="chart-header"><div class="chart-title">Network Trend — Last 12 Months</div></div>
+            <div class="chart-body"><canvas id="chartNetTrend"></canvas></div>
+        </div>
+    </div>
 
-                <div class="kpi-grid">
-                    <div class="kpi-card" style="--kpi-color:var(--color-primary);--kpi-bg:rgba(99,102,241,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">Total Incidents</div><div class="kpi-value" id="dashKpiTotal">0</div></div><div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div></div>
-                        <div class="kpi-footer">All recorded incidents</div>
-                    </div>
-                    <div class="kpi-card" style="--kpi-color:var(--color-info);--kpi-bg:rgba(59,130,246,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">Open Cases</div><div class="kpi-value" id="dashKpiOpen">0</div></div><div class="kpi-icon"><i class="fas fa-folder-open"></i></div></div>
-                        <div class="kpi-footer">Requires attention</div>
-                    </div>
-                    <div class="kpi-card" style="--kpi-color:var(--color-danger);--kpi-bg:rgba(239,68,68,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">High / Critical</div><div class="kpi-value" id="dashKpiHigh">0</div></div><div class="kpi-icon"><i class="fas fa-exclamation-circle"></i></div></div>
-                        <div class="kpi-footer">Elevated risk incidents</div>
-                    </div>
-                    <div class="kpi-card" style="--kpi-color:var(--color-success);--kpi-bg:rgba(16,185,129,0.1)">
-                        <div class="kpi-header"><div><div class="kpi-title">Closed This Month</div><div class="kpi-value" id="dashKpiClosed">0</div></div><div class="kpi-icon"><i class="fas fa-check-circle"></i></div></div>
-                        <div class="kpi-footer">Resolved in current month</div>
-                    </div>
-                </div>
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">Network Incidents (<span id="netTableCount">0</span>)</div>
+            <div class="table-search"><i class="fas fa-search"></i><input type="text" id="searchNet" placeholder="Search…" oninput="filterTable('netTableBody','searchNet')"></div>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead><tr>
+                    <th class="col-inc">Incident #</th>
+                    <th class="col-date">Date</th>
+                    <th class="col-air">Airport</th>
+                    <th>Category</th>
+                    <th>Sub-Category</th>
+                    <th class="col-risk">Risk Score</th>
+                    <th class="col-stat">Status</th>
+                    <th class="col-sum">Ground Event Summary</th>
+                </tr></thead>
+                <tbody id="netTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-                <div class="chart-grid">
-                    <div class="chart-card full-width tall">
-                        <div class="chart-header"><div><div class="chart-title">Incident Trends</div><div class="chart-subtitle">Monthly volume</div></div></div>
-                        <div class="chart-body"><canvas id="chartDashTrend"></canvas></div>
-                    </div>
-                    <div class="chart-card"><div class="chart-header"><div class="chart-title">By Category</div></div><div class="chart-body"><canvas id="chartDashCategory"></canvas></div></div>
-                    <div class="chart-card"><div class="chart-header"><div class="chart-title">By Risk Assessment</div></div><div class="chart-body"><canvas id="chartDashSeverity"></canvas></div></div>
-                </div>
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<div class="page" id="page-dashboard">
 
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">Incidents (<span id="dashTableCount">0</span>)</div>
-                        <div class="table-search"><i class="fas fa-search"></i><input type="text" id="searchDash" placeholder="Search..." oninput="filterTable('dashTableBody','searchDash')"></div>
-                    </div>
-                    <div style="overflow-x:auto">
-                        <table class="data-table">
-                            <thead><tr><th>#</th><th>Date</th><th>Category</th><th>Sub-Category</th><th>Risk Assessment</th><th>Status</th><th>Ground Event Summary</th></tr></thead>
-                            <tbody id="dashTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="risk-legend">
+        <span>Risk Scale:</span>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#6b7280"></div> Negligible (1–10)</div>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#65a30d"></div> Low (11–49)</div>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#ea580c"></div> High (50–99)</div>
+        <div class="risk-legend-item"><div class="risk-dot" style="background:#dc2626"></div> Critical (100+)</div>
+    </div>
 
-            <!-- ═══════════ TRENDS PAGE ═══════════ -->
-            <div class="page" id="page-trends">
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <div class="filter-item"><label>Year</label><select id="trendYear" onchange="applyPageFilters('trends')"><option value="">All Years</option></select></div>
-                        <div class="filter-item"><label>Category</label><select id="trendCategory" onchange="applyPageFilters('trends')"><option value="">All Categories</option></select></div>
-                        <div class="filter-item"><label>Severity</label><select id="trendSeverity" onchange="applyPageFilters('trends')"><option value="">All Severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
-                    </div>
-                </div>
-                <div class="chart-grid">
-                    <div class="chart-card full-width tall"><div class="chart-header"><div><div class="chart-title">Monthly Trend Analysis</div><div class="chart-subtitle">Last 12 months</div></div></div><div class="chart-body"><canvas id="chartTrendMain"></canvas></div></div>
-                    <div class="chart-card"><div class="chart-header"><div class="chart-title">Category Trends</div></div><div class="chart-body"><canvas id="chartTrendCategory"></canvas></div></div>
-                    <div class="chart-card"><div class="chart-header"><div class="chart-title">Severity Over Time</div></div><div class="chart-body"><canvas id="chartTrendSeverity"></canvas></div></div>
-                    <div class="chart-card full-width"><div class="chart-header"><div class="chart-title">Status Distribution</div></div><div class="chart-body"><canvas id="chartTrendStatus"></canvas></div></div>
-                </div>
-            </div>
+    <div class="filter-bar"><div class="filter-group">
+        <div class="filter-item"><label>Year</label>        <select id="dashYear"        onchange="applyPageFilters('dashboard')"><option value="">All Years</option></select></div>
+        <div class="filter-item"><label>Month</label>       <select id="dashMonth"       onchange="applyPageFilters('dashboard')"><option value="">All Months</option></select></div>
+        <div class="filter-item"><label>Category</label>    <select id="dashCategory"    onchange="applyPageFilters('dashboard')"><option value="">All Categories</option></select></div>
+        <div class="filter-item"><label>Sub-Category</label><select id="dashSubCategory" onchange="applyPageFilters('dashboard')"><option value="">All Sub-Categories</option></select></div>
+        <div class="filter-item"><label>Risk Level</label>  <select id="dashSeverity"    onchange="applyPageFilters('dashboard')">
+            <option value="">All Levels</option>
+            <option value="critical">Critical (100+)</option>
+            <option value="high">High (50–99)</option>
+            <option value="low">Low (11–49)</option>
+            <option value="negligible">Negligible (1–10)</option>
+        </select></div>
+    </div></div>
 
-            <!-- ═══════════ CATEGORIES PAGE ═══════════ -->
-            <div class="page" id="page-categories">
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <div class="filter-item"><label>Year</label><select id="catYear" onchange="applyPageFilters('categories')"><option value="">All Years</option></select></div>
-                        <div class="filter-item"><label>Severity</label><select id="catSeverity" onchange="applyPageFilters('categories')"><option value="">All Severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
-                    </div>
-                </div>
-                <div class="chart-grid">
-                    <div class="chart-card full-width"><div class="chart-header"><div class="chart-title">Category Breakdown</div></div><div class="chart-body"><canvas id="chartCatBreakdown"></canvas></div></div>
-                    <div class="chart-card"><div class="chart-header"><div class="chart-title">Sub-Categories</div></div><div class="chart-body"><canvas id="chartCatSub"></canvas></div></div>
-                    <div class="chart-card"><div class="chart-header"><div class="chart-title">Category by Status</div></div><div class="chart-body"><canvas id="chartCatStatus"></canvas></div></div>
-                    <div class="chart-card full-width"><div class="chart-header"><div class="chart-title">Category by Risk Assessment</div></div><div class="chart-body"><canvas id="chartCatSeverity"></canvas></div></div>
-                </div>
-            </div>
+    <div class="kpi-grid">
+        <div class="kpi-card" style="--kpi-color:var(--color-primary);--kpi-bg:rgba(99,102,241,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Total Incidents</div><div class="kpi-value" id="dashKpiTotal">0</div></div><div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div></div>
+            <div class="kpi-footer">All recorded incidents</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--color-info);--kpi-bg:rgba(59,130,246,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Open Cases</div><div class="kpi-value" id="dashKpiOpen">0</div></div><div class="kpi-icon"><i class="fas fa-folder-open"></i></div></div>
+            <div class="kpi-footer">Requires attention</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--sev-critical);--kpi-bg:rgba(220,38,38,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Critical Risk</div><div class="kpi-value" id="dashKpiHigh">0</div></div><div class="kpi-icon"><i class="fas fa-exclamation-circle"></i></div></div>
+            <div class="kpi-footer">Risk score ≥ 100</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--color-success);--kpi-bg:rgba(16,185,129,.1)">
+            <div class="kpi-header"><div><div class="kpi-title">Closed This Month</div><div class="kpi-value" id="dashKpiClosed">0</div></div><div class="kpi-icon"><i class="fas fa-check-circle"></i></div></div>
+            <div class="kpi-footer">Resolved in current month</div>
+        </div>
+    </div>
 
-            <!-- ═══════════ RECORDS PAGE ═══════════ -->
-            <div class="page" id="page-records">
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <div class="filter-item"><label>Airport</label><select id="recAirport" onchange="applyPageFilters('records')"><option value="">All Airports</option></select></div>
-                        <div class="filter-item"><label>Year</label><select id="recYear" onchange="applyPageFilters('records')"><option value="">All Years</option></select></div>
-                        <div class="filter-item"><label>Category</label><select id="recCategory" onchange="applyPageFilters('records')"><option value="">All Categories</option></select></div>
-                        <div class="filter-item"><label>Sub-Category</label><select id="recSubCategory" onchange="applyPageFilters('records')"><option value="">All Sub-Categories</option></select></div>
-                        <div class="filter-item"><label>Status</label><select id="recStatus" onchange="applyPageFilters('records')"><option value="">All Status</option><option value="open">Open</option><option value="inprogress">In Progress</option><option value="closed">Closed</option></select></div>
-                        <div class="filter-item"><label>Severity</label><select id="recSeverity" onchange="applyPageFilters('records')"><option value="">All Severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">All Records (<span id="recTableCount">0</span>)</div>
-                        <div class="table-search"><i class="fas fa-search"></i><input type="text" id="searchRec" placeholder="Search..." oninput="filterTable('recTableBody','searchRec')"></div>
-                    </div>
-                    <div style="overflow-x:auto">
-                        <table class="data-table">
-                            <thead><tr><th>#</th><th>Date</th><th>Airport</th><th>Category</th><th>Sub-Category</th><th>Risk Assessment</th><th>Status</th><th>Ground Event Summary</th></tr></thead>
-                            <tbody id="recTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="chart-grid">
+        <div class="chart-card full-width tall">
+            <div class="chart-header"><div><div class="chart-title">Incident Trends</div><div class="chart-subtitle">Monthly volume</div></div></div>
+            <div class="chart-body"><canvas id="chartDashTrend"></canvas></div>
+        </div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">By Category</div></div><div class="chart-body"><canvas id="chartDashCategory"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">By Risk Level</div></div><div class="chart-body"><canvas id="chartDashRisk"></canvas></div></div>
+    </div>
 
-            <!-- ═══════════ SETTINGS PAGE ═══════════ -->
-            <div class="page" id="page-settings">
-                <div class="chart-card" style="max-width:600px">
-                    <div class="chart-header"><div class="chart-title">API Settings</div></div>
-                    <div style="padding:var(--spacing-md)">
-                        <label style="display:block;margin-bottom:var(--spacing-sm);font-weight:500">Smartsheet API Token</label>
-                        <input type="password" id="settingsToken" style="width:100%;padding:var(--spacing-md);border:1px solid var(--color-border);border-radius:var(--radius-md);margin-bottom:var(--spacing-lg)" placeholder="Enter new token">
-                        <button class="btn btn-primary" onclick="saveTokenFromSettings()">Save Token</button>
-                        <button class="btn btn-secondary" style="margin-left:var(--spacing-md)" onclick="clearCache()">Clear Cache</button>
-                    </div>
-                </div>
-            </div>
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">Incidents (<span id="dashTableCount">0</span>)</div>
+            <div class="table-search"><i class="fas fa-search"></i><input type="text" id="searchDash" placeholder="Search…" oninput="filterTable('dashTableBody','searchDash')"></div>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead><tr>
+                    <th class="col-inc">Incident #</th>
+                    <th class="col-date">Date</th>
+                    <th>Category</th>
+                    <th>Sub-Category</th>
+                    <th class="col-risk">Risk Score</th>
+                    <th class="col-stat">Status</th>
+                    <th class="col-sum">Ground Event Summary</th>
+                </tr></thead>
+                <tbody id="dashTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ TRENDS ═══════════ -->
+<div class="page" id="page-trends">
+    <div class="filter-bar"><div class="filter-group">
+        <div class="filter-item"><label>Year</label>    <select id="trendYear"     onchange="applyPageFilters('trends')"><option value="">All Years</option></select></div>
+        <div class="filter-item"><label>Category</label><select id="trendCategory" onchange="applyPageFilters('trends')"><option value="">All Categories</option></select></div>
+        <div class="filter-item"><label>Risk Level</label><select id="trendSeverity" onchange="applyPageFilters('trends')">
+            <option value="">All Levels</option>
+            <option value="critical">Critical (100+)</option>
+            <option value="high">High (50–99)</option>
+            <option value="low">Low (11–49)</option>
+            <option value="negligible">Negligible (1–10)</option>
+        </select></div>
+    </div></div>
+    <div class="chart-grid">
+        <div class="chart-card full-width tall"><div class="chart-header"><div><div class="chart-title">Monthly Trend Analysis</div><div class="chart-subtitle">Last 12 months</div></div></div><div class="chart-body"><canvas id="chartTrendMain"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Category Trends (6 months)</div></div><div class="chart-body"><canvas id="chartTrendCategory"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Risk Level Over Time</div></div><div class="chart-body"><canvas id="chartTrendSeverity"></canvas></div></div>
+        <div class="chart-card full-width"><div class="chart-header"><div class="chart-title">Status Distribution</div></div><div class="chart-body"><canvas id="chartTrendStatus"></canvas></div></div>
+    </div>
+</div>
+
+<!-- ═══════════ CATEGORIES ═══════════ -->
+<div class="page" id="page-categories">
+    <div class="filter-bar"><div class="filter-group">
+        <div class="filter-item"><label>Year</label><select id="catYear" onchange="applyPageFilters('categories')"><option value="">All Years</option></select></div>
+        <div class="filter-item"><label>Risk Level</label><select id="catSeverity" onchange="applyPageFilters('categories')">
+            <option value="">All Levels</option>
+            <option value="critical">Critical (100+)</option>
+            <option value="high">High (50–99)</option>
+            <option value="low">Low (11–49)</option>
+            <option value="negligible">Negligible (1–10)</option>
+        </select></div>
+    </div></div>
+    <div class="chart-grid">
+        <div class="chart-card full-width"><div class="chart-header"><div class="chart-title">Category Breakdown</div></div><div class="chart-body"><canvas id="chartCatBreakdown"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Sub-Categories</div></div><div class="chart-body"><canvas id="chartCatSub"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Category by Status</div></div><div class="chart-body"><canvas id="chartCatStatus"></canvas></div></div>
+        <div class="chart-card full-width"><div class="chart-header"><div class="chart-title">Category by Risk Level</div></div><div class="chart-body"><canvas id="chartCatSeverity"></canvas></div></div>
+    </div>
+</div>
+
+<!-- ═══════════ RECORDS ═══════════ -->
+<div class="page" id="page-records">
+    <div class="filter-bar"><div class="filter-group">
+        <div class="filter-item"><label>Airport</label>     <select id="recAirport"     onchange="applyPageFilters('records')"><option value="">All Airports</option></select></div>
+        <div class="filter-item"><label>Year</label>        <select id="recYear"        onchange="applyPageFilters('records')"><option value="">All Years</option></select></div>
+        <div class="filter-item"><label>Category</label>    <select id="recCategory"    onchange="applyPageFilters('records')"><option value="">All Categories</option></select></div>
+        <div class="filter-item"><label>Sub-Category</label><select id="recSubCategory" onchange="applyPageFilters('records')"><option value="">All Sub-Categories</option></select></div>
+        <div class="filter-item"><label>Status</label>      <select id="recStatus"      onchange="applyPageFilters('records')">
+            <option value="">All Status</option><option value="open">Open</option><option value="inprogress">In Progress</option><option value="closed">Closed</option>
+        </select></div>
+        <div class="filter-item"><label>Risk Level</label>  <select id="recSeverity"    onchange="applyPageFilters('records')">
+            <option value="">All Levels</option>
+            <option value="critical">Critical (100+)</option>
+            <option value="high">High (50–99)</option>
+            <option value="low">Low (11–49)</option>
+            <option value="negligible">Negligible (1–10)</option>
+        </select></div>
+    </div></div>
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">All Records (<span id="recTableCount">0</span>)</div>
+            <div class="table-search"><i class="fas fa-search"></i><input type="text" id="searchRec" placeholder="Search…" oninput="filterTable('recTableBody','searchRec')"></div>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead><tr>
+                    <th class="col-inc">Incident #</th>
+                    <th class="col-date">Date</th>
+                    <th class="col-air">Airport</th>
+                    <th>Category</th>
+                    <th>Sub-Category</th>
+                    <th class="col-risk">Risk Score</th>
+                    <th class="col-stat">Status</th>
+                    <th class="col-sum">Ground Event Summary</th>
+                </tr></thead>
+                <tbody id="recTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ SETTINGS ═══════════ -->
+<div class="page" id="page-settings">
+    <div class="chart-card" style="max-width:600px">
+        <div class="chart-header"><div class="chart-title">API Settings</div></div>
+        <div style="padding:var(--s-md)">
+            <label style="display:block;margin-bottom:var(--s-sm);font-weight:500">Smartsheet API Token</label>
+            <input type="password" id="settingsToken" style="width:100%;padding:var(--s-md);border:1px solid var(--color-border);border-radius:var(--r-md);margin-bottom:var(--s-lg)" placeholder="Enter new token">
+            <button class="btn btn-primary" onclick="saveTokenFromSettings()">Save Token</button>
+            <button class="btn btn-secondary" style="margin-left:var(--s-md)" onclick="clearCache()">Clear Cache</button>
+        </div>
+    </div>
+</div>
 
         </div><!-- /content -->
     </main>
 </div>
 
-<!-- Debug -->
+<!-- Debug panel -->
 <div class="debug-panel" id="debugPanel">
     <h4><i class="fas fa-bug"></i> Debug Info</h4>
     <ul id="debugList"><li>Status: <strong>Ready</strong></li></ul>
 </div>
 
+<!-- ════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════ -->
 <script>
-/* ═══════════════════════════════════════════════════
-   STATE & CONFIG
-═══════════════════════════════════════════════════ */
+/* ── STATE & CONFIG ──────────────────────────── */
 const STATE = {
     token: null,
-    currentAirport: null,   // null = network/all
+    currentAirport: null,
     allRows: [],
     filteredRows: [],
     charts: {},
@@ -554,143 +534,150 @@ const STATE = {
 
 const CONFIG = {
     airports: [
-        { name: 'Lisbon',         code: 'LIS', sheetId: '3119587833965444' },
-        { name: 'Porto',          code: 'OPO', sheetId: '7623187461336964' },
-        { name: 'Faro',           code: 'FAO', sheetId: '2994274322620292' },
-        { name: 'Funchal',        code: 'FNC', sheetId: '7497873949990788' },
-        { name: 'Ponta Delgada',  code: 'PDL', sheetId: '2369461508868996' }
+        { name:'Lisbon',        code:'LIS', sheetId:'3119587833965444' },
+        { name:'Porto',         code:'OPO', sheetId:'7623187461336964' },
+        { name:'Faro',          code:'FAO', sheetId:'2994274322620292' },
+        { name:'Funchal',       code:'FNC', sheetId:'7497873949990788' },
+        { name:'Ponta Delgada', code:'PDL', sheetId:'2369461508868996' }
     ],
-    endpoint: (() => {
-        if (location.hostname.includes('netlify.app')) return '/.netlify/functions/smartsheet';
-        return '/api/smartsheet';
-    })()
+    endpoint: location.hostname.includes('netlify.app')
+        ? '/.netlify/functions/smartsheet'
+        : '/api/smartsheet'
 };
 
-// Colour palette
-const PAL = {
-    primary: '#6366f1',
-    severityColors: { critical: '#ef4444', high: '#f97316', medium: '#f59e0b', low: '#84cc16', unknown: '#94a3b8' },
-    statusColors:   { open: '#3b82f6', inprogress: '#f59e0b', closed: '#10b981', unknown: '#94a3b8' },
-    chart: ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#06b6d4','#f97316','#a3e635']
+/* ── RISK SCORING ────────────────────────────────
+   1–10   → negligible
+   11–49  → low
+   50–99  → high
+   100+   → critical
+   non-numeric text fallback
+─────────────────────────────────────────────── */
+const RISK_BANDS = [
+    { label:'critical',   min:100,  max:Infinity, color:'#dc2626' },
+    { label:'high',       min:50,   max:99,        color:'#ea580c' },
+    { label:'low',        min:11,   max:49,        color:'#65a30d' },
+    { label:'negligible', min:1,    max:10,        color:'#6b7280' }
+];
+
+function normaliseRisk(raw) {
+    if (raw === null || raw === undefined || raw === '') return 'unknown';
+    const n = parseFloat(String(raw).replace(/[^0-9.]/g,''));
+    if (!isNaN(n)) {
+        if (n >= 100) return 'critical';
+        if (n >= 50)  return 'high';
+        if (n >= 11)  return 'low';
+        if (n >= 1)   return 'negligible';
+        return 'unknown';
+    }
+    // text fallback
+    const s = String(raw).toLowerCase();
+    if (s.includes('critical') || s.includes('very high')) return 'critical';
+    if (s.includes('high'))    return 'high';
+    if (s.includes('medium') || s.includes('moderate')) return 'low';
+    if (s.includes('low') || s.includes('negligible'))  return 'negligible';
+    return 'unknown';
+}
+
+const RISK_COLORS = {
+    critical:'#dc2626', high:'#ea580c', low:'#65a30d', negligible:'#6b7280', unknown:'#94a3b8'
+};
+const RISK_LABELS = {
+    critical:'Critical (100+)', high:'High (50–99)', low:'Low (11–49)', negligible:'Negligible (1–10)', unknown:'Unknown'
 };
 
-/* ═══════════════════════════════════════════════════
-   UTILITIES
-═══════════════════════════════════════════════════ */
-const log  = (m, d) => d ? console.log('[GL]', m, d) : console.log('[GL]', m);
-const dbg  = (k, v) => { const el = document.getElementById('debugList'); if (!el) return; let li = el.querySelector(`[data-k="${k}"]`); if (!li) { li = document.createElement('li'); li.dataset.k = k; el.appendChild(li); } li.innerHTML = `${k}: <strong>${v}</strong>`; };
+function normaliseStatus(raw) {
+    if (!raw) return 'unknown';
+    const s = String(raw).toLowerCase().replace(/[^a-z]/g,'');
+    if (s.includes('inprogress') || s.includes('progress')) return 'inprogress';
+    if (s.includes('closed') || s.includes('complete') || s.includes('resolved')) return 'closed';
+    if (s.includes('open')) return 'open';
+    return 'unknown';
+}
+
+/* ── PALETTE ─────────────────────────────────── */
+const PAL = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#f97316','#06b6d4','#a3e635','#e11d48'];
+
+/* ── UTILITIES ───────────────────────────────── */
+const log = (m,d) => d ? console.log('[GL]',m,d) : console.log('[GL]',m);
+function dbg(k,v) {
+    let li = document.querySelector(`#debugList [data-k="${k}"]`);
+    if (!li) { li = document.createElement('li'); li.dataset.k = k; document.getElementById('debugList').appendChild(li); }
+    li.innerHTML = `${k}: <strong>${v}</strong>`;
+}
 
 function parseDate(s) {
     if (!s) return null;
     let d = new Date(s);
     if (!isNaN(d)) return d;
-    const p = s.toString().split('/');
-    if (p.length === 3) { d = new Date(p[2], p[1]-1, p[0]); if (!isNaN(d)) return d; }
+    const p = String(s).split('/');
+    if (p.length===3) { d = new Date(p[2], p[1]-1, p[0]); if (!isNaN(d)) return d; }
     return null;
 }
-
 function fmtDate(d) {
     if (!d) return 'N/A';
     return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 }
 
-// ── RISK ASSESSMENT → normalised severity ──────────────────
-// Maps the "Risk Assessment" column (numeric or text) to critical/high/medium/low
-function normaliseRisk(raw) {
-    if (!raw && raw !== 0) return 'unknown';
-    const s = raw.toString().toLowerCase().trim();
-
-    // Numeric matrix values (1-25 common in 5×5 risk matrices)
-    const n = parseFloat(s);
-    if (!isNaN(n)) {
-        if (n >= 15) return 'critical';
-        if (n >= 9)  return 'high';
-        if (n >= 4)  return 'medium';
-        return 'low';
-    }
-
-    // Text labels
-    if (s.includes('critical') || s.includes('very high')) return 'critical';
-    if (s.includes('high'))   return 'high';
-    if (s.includes('medium') || s.includes('moderate')) return 'medium';
-    if (s.includes('low'))    return 'low';
-    return 'unknown';
-}
-
-function normaliseStatus(raw) {
-    if (!raw) return 'unknown';
-    const s = raw.toString().toLowerCase().replace(/[^a-z]/g,'');
-    if (s.includes('inprogress') || s.includes('open') && s.includes('progress')) return 'inprogress';
-    if (s.includes('open'))   return 'open';
-    if (s.includes('closed') || s.includes('complete') || s.includes('resolved')) return 'closed';
-    return 'unknown';
-}
-
-/* ═══════════════════════════════════════════════════
-   API
-═══════════════════════════════════════════════════ */
-async function callAPI(action, extra = {}) {
-    const res = await fetch(CONFIG.endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, token: STATE.token, ...extra })
+/* ── API ─────────────────────────────────────── */
+async function callAPI(action, extra={}) {
+    const res  = await fetch(CONFIG.endpoint, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({action, token:STATE.token, ...extra})
     });
-    const ct = res.headers.get('content-type') || '';
-    if (!ct.includes('application/json')) throw new Error(`Non-JSON response (${res.status})`);
+    const ct = res.headers.get('content-type')||'';
+    if (!ct.includes('application/json')) throw new Error(`Non-JSON (${res.status})`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (!res.ok) throw new Error(data.error||`HTTP ${res.status}`);
     return data;
 }
 
-/* ═══════════════════════════════════════════════════
-   DATA LOADING & PARSING
-═══════════════════════════════════════════════════ */
+/* ── DATA LOADING ────────────────────────────── */
 async function loadAirport(airport) {
     const key = `sheet_${airport.sheetId}`;
     if (STATE.cache[key]) return STATE.cache[key];
-
-    const data = await callAPI('getSheet', { sheetId: airport.sheetId });
-    if (!data?.rows) throw new Error('No rows in response');
-
+    const data = await callAPI('getSheet', {sheetId: airport.sheetId});
+    if (!data?.rows) throw new Error('No rows');
     const rows = parseRows(data, airport);
     STATE.cache[key] = rows;
-    dbg(`${airport.code}`, rows.length);
+    dbg(airport.code, rows.length);
     return rows;
 }
 
+/* ── ROW PARSING ─────────────────────────────── */
 function parseRows(sheet, airport) {
-    const cols  = sheet.columns || [];
-    const rows  = sheet.rows    || [];
+    const cols = sheet.columns || [];
+    const rows = sheet.rows    || [];
 
-    log(`Columns for ${airport.code}:`, cols.map(c => c.title));
+    log(`Columns [${airport.code}]:`, cols.map(c=>c.title));
 
-    // Flexible column finder (case-insensitive, partial match fallback)
+    // Flexible column finder – exact first, then partial
     const findCol = (...names) => {
         for (const n of names) {
-            const exact = cols.find(c => c.title?.toLowerCase().trim() === n.toLowerCase().trim());
-            if (exact) return exact.id;
+            const c = cols.find(c => c.title?.toLowerCase().trim() === n.toLowerCase().trim());
+            if (c) return c.id;
         }
         for (const n of names) {
-            const partial = cols.find(c => c.title?.toLowerCase().includes(n.toLowerCase()));
-            if (partial) return partial.id;
+            const c = cols.find(c => c.title?.toLowerCase().includes(n.toLowerCase()));
+            if (c) return c.id;
         }
         return null;
     };
 
     const IDs = {
-        incidentNo:     findCol('Incident No', 'Incident Number', 'Ref', 'Reference', 'No.', 'ID'),
-        date:           findCol('Date', 'Incident Date', 'Event Date'),
-        category:       findCol('Category', 'Incident Category', 'Type'),
-        subCategory:    findCol('Sub-Category', 'Sub Category', 'Subcategory', 'Sub-category'),
-        riskAssessment: findCol('Risk Assessment', 'Risk Score', 'Risk', 'Risk Level'),
-        // Keep legacy severity as fallback
-        severity:       findCol('Severity', 'Priority'),
-        status:         findCol('Status', 'State'),
-        summary:        findCol('Ground Event Summary', 'Event Summary', 'Summary', 'Description', 'Details')
+        incidentNo:     findCol('Incident No','Incident Number','Incident #','Ref No','Reference','Ref','ID','No.'),
+        date:           findCol('Date','Incident Date','Event Date'),
+        category:       findCol('Category','Incident Category','Type'),
+        subCategory:    findCol('Sub-Category','Sub Category','Subcategory','Sub-category'),
+        riskAssessment: findCol('Risk Assessment','Risk Score','Risk Value','Risk','Risk Level','Risk Rating'),
+        severityFallback: findCol('Severity','Priority'),
+        status:         findCol('Status','State','Condition'),
+        summary:        findCol('Ground Event Summary','Event Summary','Summary','Description','Details','Notes')
     };
 
-    log(`Column map for ${airport.code}:`, IDs);
+    log(`Column IDs [${airport.code}]:`, IDs);
 
+    // Extract cell value (displayValue preferred)
     const cell = (row, id) => {
         if (!id) return null;
         const c = row.cells?.find(c => c.columnId === id);
@@ -700,504 +687,453 @@ function parseRows(sheet, airport) {
     };
 
     const out = [];
-    let seq = 1;
+    let autoSeq = 1;
 
     for (const row of rows) {
-        const dateRaw    = cell(row, IDs.date);
-        const category   = cell(row, IDs.category);
-        const summary    = cell(row, IDs.summary);
+        const dateRaw = cell(row, IDs.date);
+        const cat     = cell(row, IDs.category);
+        const sum     = cell(row, IDs.summary);
 
         // Skip completely empty rows
-        if (!dateRaw && !category && !summary) continue;
+        if (!dateRaw && !cat && !sum) continue;
 
-        const riskRaw  = cell(row, IDs.riskAssessment);
-        const sevRaw   = cell(row, IDs.severity);     // fallback
-        const severity = normaliseRisk(riskRaw ?? sevRaw);
+        // Risk assessment value
+        const riskRaw   = cell(row, IDs.riskAssessment) ?? cell(row, IDs.severityFallback);
+        const riskScore = riskRaw !== null ? parseFloat(String(riskRaw).replace(/[^0-9.]/g,'')) : NaN;
+        const severity  = normaliseRisk(riskRaw);
 
         const parsedDate = parseDate(dateRaw);
 
+        // Incident number – use sheet value or auto-generate
+        const rawIncNo = cell(row, IDs.incidentNo);
+        const incidentNo = rawIncNo ? String(rawIncNo) : `${airport.code}-${String(autoSeq).padStart(4,'0')}`;
+
         out.push({
-            id:          row.id,
-            incidentNo:  cell(row, IDs.incidentNo) || `${airport.code}-${seq}`,
+            incidentNo,
             date:        parsedDate,
             dateStr:     fmtDate(parsedDate),
             year:        parsedDate?.getFullYear() ?? null,
-            month:       parsedDate ? parsedDate.getMonth() + 1 : null,
-            category:    category    || 'Uncategorized',
+            month:       parsedDate ? parsedDate.getMonth()+1 : null,
+            category:    cat  || 'Uncategorized',
             subCategory: cell(row, IDs.subCategory) || 'N/A',
-            riskRaw:     riskRaw     || sevRaw || 'N/A',   // original value displayed in table
-            severity,                                        // normalised for filters & charts
+            riskRaw:     riskRaw ?? 'N/A',      // original raw value shown in table
+            riskScore:   isNaN(riskScore) ? null : riskScore,
+            severity,                             // normalised band
             status:      normaliseStatus(cell(row, IDs.status)),
-            summary:     summary     || 'No summary available',
+            summary:     sum  || 'No summary available',
             airport:     airport.code,
             airportName: airport.name
         });
-        seq++;
+        autoSeq++;
     }
 
-    log(`Parsed ${out.length} rows for ${airport.code}`);
+    log(`Parsed ${out.length} rows [${airport.code}]`);
     return out;
 }
 
 async function loadAll() {
-    const results = await Promise.all(CONFIG.airports.map(a => loadAirport(a).catch(() => [])));
+    const results = await Promise.all(CONFIG.airports.map(a => loadAirport(a).catch(()=>[])));
     STATE.allRows = results.flat();
-    dbg('Total', STATE.allRows.length);
+    dbg('Total rows', STATE.allRows.length);
     populateAllFilters();
 }
 
-/* ═══════════════════════════════════════════════════
-   FILTER POPULATION
-═══════════════════════════════════════════════════ */
+/* ── FILTER POPULATION ───────────────────────── */
+function setOpts(id, html) { const el=document.getElementById(id); if(el) el.innerHTML=html; }
+
 function populateAllFilters() {
     const rows = STATE.allRows;
+    const years   = [...new Set(rows.map(r=>r.year).filter(Boolean))].sort((a,b)=>b-a);
+    const cats    = [...new Set(rows.map(r=>r.category))].sort();
+    const subCats = [...new Set(rows.map(r=>r.subCategory).filter(s=>s&&s!=='N/A'))].sort();
+    const months  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-    const years      = [...new Set(rows.map(r => r.year).filter(Boolean))].sort((a,b) => b-a);
-    const categories = [...new Set(rows.map(r => r.category))].sort();
-    const subCats    = [...new Set(rows.map(r => r.subCategory).filter(s => s && s !== 'N/A'))].sort();
+    const yOpts  = '<option value="">All Years</option>'         + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    const cOpts  = '<option value="">All Categories</option>'    + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+    const scOpts = '<option value="">All Sub-Categories</option>'+ subCats.map(s=>`<option value="${s}">${s}</option>`).join('');
+    const mOpts  = '<option value="">All Months</option>'        + months.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+    const aOpts  = '<option value="">All Airports</option>'      + CONFIG.airports.map(a=>`<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
 
-    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const monthOpts = '<option value="">All Months</option>' + months.map((m,i) => `<option value="${i+1}">${m}</option>`).join('');
+    ['netYear','dashYear','trendYear','catYear','recYear'].forEach(id=>setOpts(id,yOpts));
+    ['netMonth','dashMonth'].forEach(id=>setOpts(id,mOpts));
+    ['netCategory','dashCategory','trendCategory','recCategory'].forEach(id=>setOpts(id,cOpts));
+    ['netSubCategory','dashSubCategory','recSubCategory'].forEach(id=>setOpts(id,scOpts));
+    setOpts('recAirport', aOpts);
 
-    const yearOpts    = '<option value="">All Years</option>'        + years.map(y => `<option value="${y}">${y}</option>`).join('');
-    const catOpts     = '<option value="">All Categories</option>'   + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-    const subCatOpts  = '<option value="">All Sub-Categories</option>' + subCats.map(s => `<option value="${s}">${s}</option>`).join('');
-    const airportOpts = '<option value="">All Airports</option>'     + CONFIG.airports.map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
-
-    // Year selects
-    ['netYear','dashYear','trendYear','catYear','recYear'].forEach(id => setOpts(id, yearOpts));
-    // Month selects
-    ['netMonth','dashMonth'].forEach(id => setOpts(id, monthOpts));
-    // Category selects
-    ['netCategory','dashCategory','trendCategory','recCategory'].forEach(id => setOpts(id, catOpts));
-    // SubCategory selects
-    ['netSubCategory','dashSubCategory','recSubCategory'].forEach(id => setOpts(id, subCatOpts));
-    // Airport
-    setOpts('recAirport', airportOpts);
-
-    dbg('Categories', categories.length);
+    dbg('Categories', cats.length);
     dbg('SubCategories', subCats.length);
 }
 
-function setOpts(id, html) {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
-}
+/* ── PAGE-LEVEL FILTERING ────────────────────── */
+function g(id) { return document.getElementById(id)?.value||''; }
 
-/* ═══════════════════════════════════════════════════
-   PAGE-LEVEL FILTER APPLICATION
-═══════════════════════════════════════════════════ */
-function applyPageFilters(page) {
-    const g = id => document.getElementById(id)?.value || '';
-
-    let base = STATE.currentAirport
+function baseRows() {
+    return STATE.currentAirport
         ? STATE.allRows.filter(r => r.airport === STATE.currentAirport.code)
         : STATE.allRows;
+}
 
-    let rows = base;
+function applyPageFilters(page) {
+    let rows = baseRows();
 
-    if (page === 'network') {
-        rows = base.filter(r =>
-            (!g('netYear')        || r.year == g('netYear')) &&
-            (!g('netMonth')       || r.month == g('netMonth')) &&
-            (!g('netCategory')    || r.category === g('netCategory')) &&
-            (!g('netSubCategory') || r.subCategory === g('netSubCategory')) &&
-            (!g('netSeverity')    || r.severity === g('netSeverity'))
+    if (page==='network') {
+        rows = rows.filter(r=>
+            (!g('netYear')        || r.year==g('netYear')) &&
+            (!g('netMonth')       || r.month==g('netMonth')) &&
+            (!g('netCategory')    || r.category===g('netCategory')) &&
+            (!g('netSubCategory') || r.subCategory===g('netSubCategory')) &&
+            (!g('netSeverity')    || r.severity===g('netSeverity'))
         );
-        STATE.filteredRows = rows;
         renderNetwork(rows);
 
-    } else if (page === 'dashboard') {
-        rows = base.filter(r =>
-            (!g('dashYear')        || r.year == g('dashYear')) &&
-            (!g('dashMonth')       || r.month == g('dashMonth')) &&
-            (!g('dashCategory')    || r.category === g('dashCategory')) &&
-            (!g('dashSubCategory') || r.subCategory === g('dashSubCategory')) &&
-            (!g('dashSeverity')    || r.severity === g('dashSeverity'))
+    } else if (page==='dashboard') {
+        rows = rows.filter(r=>
+            (!g('dashYear')        || r.year==g('dashYear')) &&
+            (!g('dashMonth')       || r.month==g('dashMonth')) &&
+            (!g('dashCategory')    || r.category===g('dashCategory')) &&
+            (!g('dashSubCategory') || r.subCategory===g('dashSubCategory')) &&
+            (!g('dashSeverity')    || r.severity===g('dashSeverity'))
         );
-        STATE.filteredRows = rows;
         renderDashboard(rows);
 
-    } else if (page === 'trends') {
-        rows = base.filter(r =>
-            (!g('trendYear')     || r.year == g('trendYear')) &&
-            (!g('trendCategory') || r.category === g('trendCategory')) &&
-            (!g('trendSeverity') || r.severity === g('trendSeverity'))
+    } else if (page==='trends') {
+        rows = rows.filter(r=>
+            (!g('trendYear')     || r.year==g('trendYear')) &&
+            (!g('trendCategory') || r.category===g('trendCategory')) &&
+            (!g('trendSeverity') || r.severity===g('trendSeverity'))
         );
-        STATE.filteredRows = rows;
         renderTrends(rows);
 
-    } else if (page === 'categories') {
-        rows = base.filter(r =>
-            (!g('catYear')     || r.year == g('catYear')) &&
-            (!g('catSeverity') || r.severity === g('catSeverity'))
+    } else if (page==='categories') {
+        rows = rows.filter(r=>
+            (!g('catYear')     || r.year==g('catYear')) &&
+            (!g('catSeverity') || r.severity===g('catSeverity'))
         );
-        STATE.filteredRows = rows;
         renderCategories(rows);
 
-    } else if (page === 'records') {
-        rows = base.filter(r =>
-            (!g('recAirport')     || r.airport === g('recAirport')) &&
-            (!g('recYear')        || r.year == g('recYear')) &&
-            (!g('recCategory')    || r.category === g('recCategory')) &&
-            (!g('recSubCategory') || r.subCategory === g('recSubCategory')) &&
-            (!g('recStatus')      || r.status === g('recStatus')) &&
-            (!g('recSeverity')    || r.severity === g('recSeverity'))
+    } else if (page==='records') {
+        rows = rows.filter(r=>
+            (!g('recAirport')     || r.airport===g('recAirport')) &&
+            (!g('recYear')        || r.year==g('recYear')) &&
+            (!g('recCategory')    || r.category===g('recCategory')) &&
+            (!g('recSubCategory') || r.subCategory===g('recSubCategory')) &&
+            (!g('recStatus')      || r.status===g('recStatus')) &&
+            (!g('recSeverity')    || r.severity===g('recSeverity'))
         );
-        STATE.filteredRows = rows;
         renderRecords(rows);
     }
+    STATE.filteredRows = rows;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER HELPERS
-═══════════════════════════════════════════════════ */
-function sevBadge(sev)  { return `<span class="badge severity-${sev}">${sev}</span>`; }
-function statBadge(st)  { return `<span class="badge status-${st}">${st.replace('inprogress','In Progress')}</span>`; }
-function airportBadge(code) { return `<span class="badge airport">${code}</span>`; }
-
-function kpiSet(ids, rows) {
-    const now = new Date();
-    const cm  = now.getMonth() + 1;
-    const cy  = now.getFullYear();
-    document.getElementById(ids[0]).textContent = rows.length;
-    document.getElementById(ids[1]).textContent = rows.filter(r => r.status === 'open').length;
-    document.getElementById(ids[2]).textContent = rows.filter(r => ['critical','high'].includes(r.severity)).length;
-    document.getElementById(ids[3]).textContent = rows.filter(r => r.status === 'closed' && r.month === cm && r.year === cy).length;
+/* ── BADGE HELPERS ───────────────────────────── */
+function riskBadge(sev, raw) {
+    const label = sev==='low' ? `Low · ${raw}` : sev==='negligible' ? `Neg · ${raw}` : sev==='high' ? `High · ${raw}` : sev==='critical' ? `Crit · ${raw}` : raw;
+    return `<span class="badge sev-${sev}" title="${RISK_LABELS[sev]||sev}">${label}</span>`;
 }
-
-/* ─ Chart helpers ─ */
-function makeChart(id, type, data, opts = {}) {
-    const canvas = document.getElementById(id);
-    if (!canvas) return;
-    if (STATE.charts[id]) { STATE.charts[id].destroy(); }
-    STATE.charts[id] = new Chart(canvas, {
-        type,
-        data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { padding: 14, font: { size: 12, family: 'Inter' }, usePointStyle: true }
-                }
-            },
-            ...opts
-        }
-    });
+function statBadge(st) {
+    const lbl = {open:'Open',inprogress:'In Progress',closed:'Closed',unknown:'Unknown'}[st]||st;
+    return `<span class="badge st-${st}">${lbl}</span>`;
 }
+function airBadge(code) { return `<span class="badge air">${code}</span>`; }
+function incBadge(no)   { return `<span class="inc-no">${no}</span>`; }
 
-const scaleOpts = { scales: { y: { beginAtZero: true, ticks: { font: { family:'Inter' } } }, x: { ticks: { font: { family:'Inter' } } } } };
-
-function countBy(rows, key) {
-    const m = {};
-    rows.forEach(r => { const v = r[key] || 'Unknown'; m[v] = (m[v]||0) + 1; });
-    return Object.entries(m).sort((a,b) => b[1]-a[1]);
-}
-
-function trendMonths(rows, n = 12) {
-    const now  = new Date();
-    const MNAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const slots  = {};
-    for (let i = n-1; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-        slots[`${d.getFullYear()}-${d.getMonth()+1}`] = { label: `${MNAMES[d.getMonth()]} ${d.getFullYear()}`, count: 0 };
+/* ── SHARED TABLE BUILDER ────────────────────── */
+function buildRows(rows, colFns) {
+    if (!rows.length) {
+        return `<tr><td colspan="${colFns.length}" class="empty-state"><i class="fas fa-inbox"></i><p>No records found</p></td></tr>`;
     }
-    rows.forEach(r => {
-        if (r.year && r.month) { const k = `${r.year}-${r.month}`; if (slots[k]) slots[k].count++; }
-    });
-    const arr = Object.values(slots);
-    return { labels: arr.map(s => s.label), data: arr.map(s => s.count) };
-}
-
-/* ─ Table helper ─ */
-function buildTableRows(rows, columns) {
-    // columns: array of accessor functions (row) => html string
-    if (!rows.length) return `<tr><td colspan="${columns.length}" class="empty-state"><i class="fas fa-inbox"></i><p>No records found</p></td></tr>`;
-    return rows.map(row => `<tr>${columns.map(fn => `<td>${fn(row)}</td>`).join('')}</tr>`).join('');
+    return rows.map(r=>`<tr>${colFns.map(fn=>`<td>${fn(r)}</td>`).join('')}</tr>`).join('');
 }
 
 function filterTable(tbodyId, inputId) {
-    const q = document.getElementById(inputId)?.value.toLowerCase() || '';
-    document.querySelectorAll(`#${tbodyId} tr`).forEach(tr => {
+    const q = (document.getElementById(inputId)?.value||'').toLowerCase();
+    document.querySelectorAll(`#${tbodyId} tr`).forEach(tr=>{
         tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER NETWORK
-═══════════════════════════════════════════════════ */
-function renderNetwork(rows) {
-    kpiSet(['netKpiTotal','netKpiOpen','netKpiHigh','netKpiClosed'], rows);
+/* ── CHART FACTORY ───────────────────────────── */
+function mkChart(id, type, data, extraOpts={}) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    if (STATE.charts[id]) STATE.charts[id].destroy();
+    STATE.charts[id] = new Chart(canvas, {
+        type,
+        data,
+        options: {
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{ legend:{ position:'bottom', labels:{ padding:14, font:{size:12,family:'Inter'}, usePointStyle:true } } },
+            ...extraOpts
+        }
+    });
+}
 
-    // Incidents by airport
-    const airCounts = CONFIG.airports.map(a => rows.filter(r => r.airport === a.code).length);
-    makeChart('chartNetAirports', 'bar', {
-        labels: CONFIG.airports.map(a => `${a.name} (${a.code})`),
-        datasets: [{ label: 'Incidents', data: airCounts, backgroundColor: PAL.chart }]
+const scaleOpts = {
+    scales:{
+        y:{ beginAtZero:true, ticks:{font:{family:'Inter'}} },
+        x:{ ticks:{font:{family:'Inter'}} }
+    }
+};
+
+/* ── DATA HELPERS ────────────────────────────── */
+function countBy(rows, key) {
+    const m={};
+    rows.forEach(r=>{ const v=r[key]||'Unknown'; m[v]=(m[v]||0)+1; });
+    return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+}
+
+function trendMonths(rows, n=12) {
+    const now = new Date();
+    const MN  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const slots={};
+    for(let i=n-1;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); slots[`${d.getFullYear()}-${d.getMonth()+1}`]={label:`${MN[d.getMonth()]} ${d.getFullYear()}`,count:0}; }
+    rows.forEach(r=>{ if(r.year&&r.month){ const k=`${r.year}-${r.month}`; if(slots[k]) slots[k].count++; } });
+    const arr=Object.values(slots);
+    return {labels:arr.map(s=>s.label), data:arr.map(s=>s.count)};
+}
+
+function kpiSet(ids, rows) {
+    const now=new Date(), cm=now.getMonth()+1, cy=now.getFullYear();
+    document.getElementById(ids[0]).textContent = rows.length;
+    document.getElementById(ids[1]).textContent = rows.filter(r=>r.status==='open').length;
+    document.getElementById(ids[2]).textContent = rows.filter(r=>r.severity==='critical').length;
+    document.getElementById(ids[3]).textContent = rows.filter(r=>r.status==='closed'&&r.month===cm&&r.year===cy).length;
+}
+
+function riskChartData(rows) {
+    const order=['critical','high','low','negligible','unknown'];
+    return {
+        labels: order.map(s=>RISK_LABELS[s]),
+        datasets:[{ data: order.map(s=>rows.filter(r=>r.severity===s).length), backgroundColor: order.map(s=>RISK_COLORS[s]) }]
+    };
+}
+
+/* ── RENDER: NETWORK ─────────────────────────── */
+function renderNetwork(rows) {
+    kpiSet(['netKpiTotal','netKpiOpen','netKpiCritical','netKpiClosed'], rows);
+
+    // By airport
+    mkChart('chartNetAirports','bar',{
+        labels: CONFIG.airports.map(a=>`${a.name} (${a.code})`),
+        datasets:[{ label:'Incidents', data: CONFIG.airports.map(a=>rows.filter(r=>r.airport===a.code).length), backgroundColor: PAL }]
     }, scaleOpts);
 
-    // Categories doughnut
-    const catData = countBy(rows, 'category').slice(0, 10);
-    makeChart('chartNetCategories', 'doughnut', {
-        labels: catData.map(([l]) => l),
-        datasets: [{ data: catData.map(([,v]) => v), backgroundColor: PAL.chart }]
-    });
+    // Categories
+    const cd = countBy(rows,'category').slice(0,10);
+    mkChart('chartNetCategories','doughnut',{labels:cd.map(([l])=>l),datasets:[{data:cd.map(([,v])=>v),backgroundColor:PAL}]});
 
-    // Status pie
-    const statuses = ['open','inprogress','closed'];
-    makeChart('chartNetStatus', 'pie', {
-        labels: ['Open','In Progress','Closed'],
-        datasets: [{ data: statuses.map(s => rows.filter(r => r.status===s).length), backgroundColor: ['#3b82f6','#f59e0b','#10b981'] }]
-    });
+    // Risk levels
+    mkChart('chartNetRisk','pie', riskChartData(rows));
 
-    // Network trend
-    const td = trendMonths(rows, 12);
-    makeChart('chartNetTrend', 'line', {
-        labels: td.labels,
-        datasets: [{ label: 'Incidents', data: td.data, borderColor: PAL.primary, backgroundColor: PAL.primary+'33', tension: 0.4, fill: true }]
+    // Trend
+    const td = trendMonths(rows,12);
+    mkChart('chartNetTrend','line',{
+        labels:td.labels,
+        datasets:[{label:'Incidents',data:td.data,borderColor:'#6366f1',backgroundColor:'#6366f133',tension:.4,fill:true}]
     }, scaleOpts);
 
     // Table
-    const tbody = document.getElementById('netTableBody');
-    const countEl = document.getElementById('netTableCount');
-    if (countEl) countEl.textContent = rows.length;
-    tbody.innerHTML = buildTableRows(rows, [
-        r => `<span style="font-size:0.75rem;color:var(--color-text-muted)">${r.incidentNo}</span>`,
-        r => r.dateStr,
-        r => airportBadge(r.airport),
-        r => r.category,
-        r => r.subCategory,
-        r => sevBadge(r.severity),
-        r => statBadge(r.status),
-        r => `<span class="td-wrap" title="${r.summary}">${r.summary.substring(0,80)}${r.summary.length>80?'…':''}</span>`
+    document.getElementById('netTableCount').textContent = rows.length;
+    document.getElementById('netTableBody').innerHTML = buildRows(rows,[
+        r=>incBadge(r.incidentNo),
+        r=>r.dateStr,
+        r=>airBadge(r.airport),
+        r=>r.category,
+        r=>r.subCategory,
+        r=>riskBadge(r.severity, r.riskRaw),
+        r=>statBadge(r.status),
+        r=>`<span class="td-ellipsis" title="${r.summary.replace(/"/g,'&quot;')}">${r.summary.substring(0,80)}${r.summary.length>80?'…':''}</span>`
     ]);
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER DASHBOARD
-═══════════════════════════════════════════════════ */
+/* ── RENDER: DASHBOARD ───────────────────────── */
 function renderDashboard(rows) {
     kpiSet(['dashKpiTotal','dashKpiOpen','dashKpiHigh','dashKpiClosed'], rows);
 
-    const td = trendMonths(rows, 12);
-    makeChart('chartDashTrend', 'line', {
-        labels: td.labels,
-        datasets: [{ label: 'Incidents', data: td.data, borderColor: PAL.primary, backgroundColor: PAL.primary+'33', tension: 0.4, fill: true }]
+    const td=trendMonths(rows,12);
+    mkChart('chartDashTrend','line',{
+        labels:td.labels,
+        datasets:[{label:'Incidents',data:td.data,borderColor:'#6366f1',backgroundColor:'#6366f133',tension:.4,fill:true}]
     }, scaleOpts);
 
-    const catData = countBy(rows, 'category').slice(0,10);
-    makeChart('chartDashCategory', 'doughnut', {
-        labels: catData.map(([l]) => l),
-        datasets: [{ data: catData.map(([,v]) => v), backgroundColor: PAL.chart }]
-    });
+    const cd=countBy(rows,'category').slice(0,10);
+    mkChart('chartDashCategory','doughnut',{labels:cd.map(([l])=>l),datasets:[{data:cd.map(([,v])=>v),backgroundColor:PAL}]});
 
-    const sevOrder = ['critical','high','medium','low','unknown'];
-    makeChart('chartDashSeverity', 'pie', {
-        labels: sevOrder.map(s => s.charAt(0).toUpperCase()+s.slice(1)),
-        datasets: [{ data: sevOrder.map(s => rows.filter(r => r.severity===s).length), backgroundColor: sevOrder.map(s => PAL.severityColors[s]) }]
-    });
+    mkChart('chartDashRisk','pie', riskChartData(rows));
 
-    const tbody = document.getElementById('dashTableBody');
-    const countEl = document.getElementById('dashTableCount');
-    if (countEl) countEl.textContent = rows.length;
-    tbody.innerHTML = buildTableRows(rows, [
-        r => `<span style="font-size:0.75rem;color:var(--color-text-muted)">${r.incidentNo}</span>`,
-        r => r.dateStr,
-        r => r.category,
-        r => r.subCategory,
-        r => sevBadge(r.severity),
-        r => statBadge(r.status),
-        r => `<span class="td-wrap" title="${r.summary}">${r.summary.substring(0,80)}${r.summary.length>80?'…':''}</span>`
+    document.getElementById('dashTableCount').textContent = rows.length;
+    document.getElementById('dashTableBody').innerHTML = buildRows(rows,[
+        r=>incBadge(r.incidentNo),
+        r=>r.dateStr,
+        r=>r.category,
+        r=>r.subCategory,
+        r=>riskBadge(r.severity, r.riskRaw),
+        r=>statBadge(r.status),
+        r=>`<span class="td-ellipsis" title="${r.summary.replace(/"/g,'&quot;')}">${r.summary.substring(0,80)}${r.summary.length>80?'…':''}</span>`
     ]);
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER TRENDS
-═══════════════════════════════════════════════════ */
+/* ── RENDER: TRENDS ──────────────────────────── */
 function renderTrends(rows) {
-    const td = trendMonths(rows, 12);
-    makeChart('chartTrendMain', 'line', {
-        labels: td.labels,
-        datasets: [{ label: 'Incidents', data: td.data, borderColor: PAL.primary, backgroundColor: PAL.primary+'33', tension: 0.4, fill: true }]
+    const td=trendMonths(rows,12);
+    mkChart('chartTrendMain','line',{
+        labels:td.labels,
+        datasets:[{label:'Incidents',data:td.data,borderColor:'#6366f1',backgroundColor:'#6366f133',tension:.4,fill:true}]
     }, scaleOpts);
 
     // Top 5 categories over 6 months
-    const now    = new Date();
-    const MNAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const top5cats = countBy(rows,'category').slice(0,5).map(([l])=>l);
-    const mLabels  = [];
-    const mData    = top5cats.map(() => []);
-    for (let i=5; i>=0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-        mLabels.push(`${MNAMES[d.getMonth()]} ${d.getFullYear()}`);
-        top5cats.forEach((cat, ci) => {
-            mData[ci].push(rows.filter(r => r.category===cat && r.year===d.getFullYear() && r.month===d.getMonth()+1).length);
-        });
+    const now=new Date();
+    const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const top5=countBy(rows,'category').slice(0,5).map(([l])=>l);
+    const mLabels=[], mData=top5.map(()=>[]);
+    for(let i=5;i>=0;i--){
+        const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+        mLabels.push(`${MN[d.getMonth()]} ${d.getFullYear()}`);
+        top5.forEach((cat,ci)=>mData[ci].push(rows.filter(r=>r.category===cat&&r.year===d.getFullYear()&&r.month===d.getMonth()+1).length));
     }
-    makeChart('chartTrendCategory', 'bar', {
-        labels: mLabels,
-        datasets: top5cats.map((cat, i) => ({ label: cat, data: mData[i], backgroundColor: PAL.chart[i], borderColor: PAL.chart[i], borderWidth: 1 }))
-    }, { ...scaleOpts, plugins: { ...scaleOpts.plugins } });
+    mkChart('chartTrendCategory','bar',{
+        labels:mLabels,
+        datasets:top5.map((cat,i)=>({label:cat,data:mData[i],backgroundColor:PAL[i],borderColor:PAL[i],borderWidth:1}))
+    }, scaleOpts);
 
-    // Severity doughnut
-    const sevOrder = ['critical','high','medium','low','unknown'];
-    makeChart('chartTrendSeverity', 'doughnut', {
-        labels: sevOrder.map(s => s.charAt(0).toUpperCase()+s.slice(1)),
-        datasets: [{ data: sevOrder.map(s => rows.filter(r => r.severity===s).length), backgroundColor: sevOrder.map(s => PAL.severityColors[s]) }]
-    });
+    // Risk over time – stacked line per level
+    const riskOrder=['critical','high','low','negligible'];
+    const riskMLabels=[], riskMData=riskOrder.map(()=>[]);
+    for(let i=11;i>=0;i--){
+        const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+        riskMLabels.push(`${MN[d.getMonth()]} ${d.getFullYear()}`);
+        riskOrder.forEach((sev,si)=>riskMData[si].push(rows.filter(r=>r.severity===sev&&r.year===d.getFullYear()&&r.month===d.getMonth()+1).length));
+    }
+    mkChart('chartTrendSeverity','line',{
+        labels:riskMLabels,
+        datasets:riskOrder.map((sev,i)=>({
+            label:RISK_LABELS[sev],data:riskMData[i],
+            borderColor:RISK_COLORS[sev],backgroundColor:RISK_COLORS[sev]+'33',
+            tension:.3,fill:false
+        }))
+    }, scaleOpts);
 
-    // Status bar
-    makeChart('chartTrendStatus', 'bar', {
-        labels: ['Open','In Progress','Closed'],
-        datasets: [{ label: 'Incidents', data: ['open','inprogress','closed'].map(s => rows.filter(r=>r.status===s).length), backgroundColor: ['#3b82f6','#f59e0b','#10b981'] }]
+    mkChart('chartTrendStatus','bar',{
+        labels:['Open','In Progress','Closed'],
+        datasets:[{label:'Incidents',data:['open','inprogress','closed'].map(s=>rows.filter(r=>r.status===s).length),backgroundColor:['#2563eb','#d97706','#059669']}]
     }, scaleOpts);
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER CATEGORIES
-═══════════════════════════════════════════════════ */
+/* ── RENDER: CATEGORIES ──────────────────────── */
 function renderCategories(rows) {
-    const catData = countBy(rows,'category').slice(0,12);
-    makeChart('chartCatBreakdown', 'bar', {
-        labels: catData.map(([l])=>l),
-        datasets: [{ label:'Incidents', data: catData.map(([,v])=>v), backgroundColor: PAL.chart }]
+    const cd=countBy(rows,'category').slice(0,12);
+    mkChart('chartCatBreakdown','bar',{
+        labels:cd.map(([l])=>l),
+        datasets:[{label:'Incidents',data:cd.map(([,v])=>v),backgroundColor:PAL}]
     }, scaleOpts);
 
-    const subData = countBy(rows,'subCategory').filter(([l])=>l!=='N/A').slice(0,10);
-    makeChart('chartCatSub', 'doughnut', {
-        labels: subData.map(([l])=>l),
-        datasets: [{ data: subData.map(([,v])=>v), backgroundColor: PAL.chart }]
+    const sd=countBy(rows,'subCategory').filter(([l])=>l!=='N/A').slice(0,10);
+    mkChart('chartCatSub','doughnut',{labels:sd.map(([l])=>l),datasets:[{data:sd.map(([,v])=>v),backgroundColor:PAL}]});
+
+    const cats=cd.map(([l])=>l);
+    mkChart('chartCatStatus','bar',{
+        labels:cats,
+        datasets:['open','inprogress','closed'].map((st,i)=>({
+            label:['Open','In Progress','Closed'][i],
+            data:cats.map(c=>rows.filter(r=>r.category===c&&r.status===st).length),
+            backgroundColor:['#2563eb','#d97706','#059669'][i]
+        }))
+    }, scaleOpts);
+
+    const riskOrder=['critical','high','low','negligible'];
+    mkChart('chartCatSeverity','bar',{
+        labels:cats,
+        datasets:riskOrder.map(sev=>({
+            label:RISK_LABELS[sev],
+            data:cats.map(c=>rows.filter(r=>r.category===c&&r.severity===sev).length),
+            backgroundColor:RISK_COLORS[sev]
+        }))
+    }, {
+        scales:{
+            x:{stacked:true,ticks:{font:{family:'Inter'}}},
+            y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Inter'}}}
+        }
     });
-
-    const cats = catData.map(([l])=>l);
-    makeChart('chartCatStatus', 'bar', {
-        labels: cats,
-        datasets: ['open','inprogress','closed'].map((st,i) => ({
-            label: ['Open','In Progress','Closed'][i],
-            data: cats.map(c => rows.filter(r=>r.category===c&&r.status===st).length),
-            backgroundColor: ['#3b82f6','#f59e0b','#10b981'][i]
-        }))
-    }, { ...scaleOpts, scales: { ...scaleOpts.scales, x: { stacked: false } } });
-
-    const sevOrder = ['critical','high','medium','low','unknown'];
-    makeChart('chartCatSeverity', 'bar', {
-        labels: cats,
-        datasets: sevOrder.map((sev,i) => ({
-            label: sev.charAt(0).toUpperCase()+sev.slice(1),
-            data: cats.map(c => rows.filter(r=>r.category===c&&r.severity===sev).length),
-            backgroundColor: PAL.severityColors[sev]
-        }))
-    }, { ...scaleOpts, scales: { x: { stacked: true, ticks:{font:{family:'Inter'}} }, y: { stacked: true, beginAtZero:true, ticks:{font:{family:'Inter'}} } } });
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER RECORDS
-═══════════════════════════════════════════════════ */
+/* ── RENDER: RECORDS ─────────────────────────── */
 function renderRecords(rows) {
-    const tbody  = document.getElementById('recTableBody');
-    const countEl = document.getElementById('recTableCount');
-    if (countEl) countEl.textContent = rows.length;
-    tbody.innerHTML = buildTableRows(rows, [
-        r => `<span style="font-size:0.75rem;color:var(--color-text-muted)">${r.incidentNo}</span>`,
-        r => r.dateStr,
-        r => airportBadge(r.airport),
-        r => r.category,
-        r => r.subCategory,
-        r => sevBadge(r.severity),
-        r => statBadge(r.status),
-        r => `<span class="td-wrap" title="${r.summary}">${r.summary.substring(0,80)}${r.summary.length>80?'…':''}</span>`
+    document.getElementById('recTableCount').textContent = rows.length;
+    document.getElementById('recTableBody').innerHTML = buildRows(rows,[
+        r=>incBadge(r.incidentNo),
+        r=>r.dateStr,
+        r=>airBadge(r.airport),
+        r=>r.category,
+        r=>r.subCategory,
+        r=>riskBadge(r.severity, r.riskRaw),
+        r=>statBadge(r.status),
+        r=>`<span class="td-ellipsis" title="${r.summary.replace(/"/g,'&quot;')}">${r.summary.substring(0,80)}${r.summary.length>80?'…':''}</span>`
     ]);
 }
 
-/* ═══════════════════════════════════════════════════
-   PAGE SWITCHING
-═══════════════════════════════════════════════════ */
+/* ── PAGE SWITCHING ──────────────────────────── */
 const PAGE_META = {
-    network:    { title:'Portugal Network',     subtitle:'Aggregated safety metrics across all airports' },
-    dashboard:  { title:'Dashboard Overview',   subtitle:'Real-time safety metrics and analytics' },
-    trends:     { title:'Incident Trends',      subtitle:'Temporal analysis of incidents' },
-    categories: { title:'Category Analysis',    subtitle:'Breakdown by incident type and sub-type' },
-    records:    { title:'All Records',          subtitle:'Complete searchable incident database' },
-    settings:   { title:'Settings',             subtitle:'Configuration and preferences' }
+    network:   {title:'Portugal Network',    subtitle:'Aggregated safety metrics across all airports'},
+    dashboard: {title:'Dashboard Overview',  subtitle:'Real-time safety metrics and analytics'},
+    trends:    {title:'Incident Trends',     subtitle:'Temporal analysis of incidents'},
+    categories:{title:'Category Analysis',   subtitle:'Breakdown by incident type and sub-type'},
+    records:   {title:'All Records',         subtitle:'Complete searchable incident database'},
+    settings:  {title:'Settings',            subtitle:'Configuration and preferences'}
 };
 
 function switchPage(name) {
-    // Nav highlight
-    document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-        el.classList.toggle('active', el.dataset.page === name);
-    });
-    // Show page
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const pg = document.getElementById(`page-${name}`);
-    if (pg) pg.classList.add('active');
-    // Title
-    const m = PAGE_META[name] || {};
-    document.getElementById('pageTitle').textContent     = m.title    || name;
-    document.getElementById('pageSubtitle').textContent  = m.subtitle || '';
-    // Render
-    if (name !== 'settings') applyPageFilters(name);
+    document.querySelectorAll('.nav-item[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===name));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    const pg=document.getElementById(`page-${name}`); if(pg) pg.classList.add('active');
+    const m=PAGE_META[name]||{};
+    document.getElementById('pageTitle').textContent    = m.title||name;
+    document.getElementById('pageSubtitle').textContent = m.subtitle||'';
+    if (name!=='settings') applyPageFilters(name);
 }
 
 function switchToAirport(airport) {
     STATE.currentAirport = airport;
-    document.querySelectorAll('.airport-btn').forEach(b => b.classList.toggle('active', b.dataset.code === airport.code));
+    document.querySelectorAll('.airport-btn').forEach(b=>b.classList.toggle('active',b.dataset.code===airport.code));
     switchPage('dashboard');
 }
 
 function switchToNetwork() {
     STATE.currentAirport = null;
-    document.querySelectorAll('.airport-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.airport-btn').forEach(b=>b.classList.remove('active'));
     switchPage('network');
 }
 
-/* ═══════════════════════════════════════════════════
-   MISC ACTIONS
-═══════════════════════════════════════════════════ */
+/* ── MISC ────────────────────────────────────── */
 function refreshData() {
-    STATE.cache = {};
-    document.getElementById('splashScreen').style.display = 'flex';
-    loadAll().then(() => {
-        document.getElementById('splashScreen').style.display = 'none';
-        const active = document.querySelector('.page.active');
-        const name   = active?.id?.replace('page-','') || 'network';
-        applyPageFilters(name);
-    }).catch(e => {
-        document.getElementById('splashScreen').style.display = 'none';
-        console.error(e);
-        alert('Refresh failed – check console');
-    });
+    STATE.cache={};
+    document.getElementById('splashScreen').style.display='flex';
+    loadAll().then(()=>{
+        document.getElementById('splashScreen').style.display='none';
+        const active=document.querySelector('.page.active');
+        applyPageFilters(active?.id?.replace('page-','')||'network');
+    }).catch(e=>{ document.getElementById('splashScreen').style.display='none'; console.error(e); alert('Refresh failed'); });
 }
 
 function toggleDebug() { document.getElementById('debugPanel').classList.toggle('active'); }
 
 function saveToken() {
-    const t = document.getElementById('tokenInput').value.trim();
-    if (!t) return alert('Enter a valid token');
-    STATE.token = t;
-    localStorage.setItem('smartsheet_token', t);
-    document.getElementById('setupOverlay').style.display = 'none';
+    const t=document.getElementById('tokenInput').value.trim();
+    if(!t) return alert('Enter a valid token');
+    STATE.token=t; localStorage.setItem('smartsheet_token',t);
+    document.getElementById('setupOverlay').style.display='none';
     init();
 }
-
 function saveTokenFromSettings() {
-    const t = document.getElementById('settingsToken').value.trim();
-    if (!t) return alert('Enter a valid token');
-    STATE.token = t;
-    localStorage.setItem('smartsheet_token', t);
-    alert('Token saved!');
-    refreshData();
+    const t=document.getElementById('settingsToken').value.trim();
+    if(!t) return alert('Enter a valid token');
+    STATE.token=t; localStorage.setItem('smartsheet_token',t);
+    alert('Token saved!'); refreshData();
 }
-
-function clearCache() {
-    if (!confirm('Clear cache?')) return;
-    STATE.cache = {};
-    alert('Cache cleared');
-}
+function clearCache() { if(!confirm('Clear cache?')) return; STATE.cache={}; alert('Cache cleared'); }
 
 function renderAirportButtons() {
-    document.getElementById('airportList').innerHTML = CONFIG.airports.map(a =>
+    document.getElementById('airportList').innerHTML = CONFIG.airports.map(a=>
         `<div class="airport-btn" data-code="${a.code}" onclick='switchToAirport(${JSON.stringify(a)})'>
             <span><i class="fas fa-plane" style="margin-right:6px"></i>${a.name}</span>
             <span class="airport-code">${a.code}</span>
@@ -1205,31 +1141,28 @@ function renderAirportButtons() {
     ).join('');
 }
 
-/* ═══════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════ */
+/* ── INIT ────────────────────────────────────── */
 async function init() {
-    document.getElementById('splashScreen').style.display = 'flex';
+    document.getElementById('splashScreen').style.display='flex';
     try {
         await loadAll();
         switchToNetwork();
     } catch(e) {
-        console.error('Init failed:', e);
+        console.error('Init failed:',e);
         alert('Initialisation failed – check console');
     } finally {
-        document.getElementById('splashScreen').style.display = 'none';
+        document.getElementById('splashScreen').style.display='none';
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Wire nav clicks
-    document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-        el.addEventListener('click', e => { e.preventDefault(); switchPage(el.dataset.page); });
+document.addEventListener('DOMContentLoaded',()=>{
+    document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
+        el.addEventListener('click',e=>{ e.preventDefault(); switchPage(el.dataset.page); });
     });
     renderAirportButtons();
-    const token = localStorage.getItem('smartsheet_token');
-    if (token) { STATE.token = token; init(); }
-    else { document.getElementById('splashScreen').style.display = 'none'; document.getElementById('setupOverlay').style.display = 'flex'; }
+    const token=localStorage.getItem('smartsheet_token');
+    if(token){ STATE.token=token; init(); }
+    else { document.getElementById('splashScreen').style.display='none'; document.getElementById('setupOverlay').style.display='flex'; }
 });
 </script>
 </body>

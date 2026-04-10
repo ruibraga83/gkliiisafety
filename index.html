@@ -424,16 +424,15 @@ const S = {
    CONFIG  — update sheetIds if they change
 ════════════════════════════════════════════ */
 const CFG = {
+  // Vercel serves the function at exactly this path
+  endpoint: '/api/smartsheet',
   airports: [
-    { name:'Lisbon',        code:'LIS', sheetId:'3119587833965444' },
-    { name:'Porto',         code:'OPO', sheetId:'7623187461336964' },
-    { name:'Faro',          code:'FAO', sheetId:'2994274322620292' },
-    { name:'Funchal',       code:'FNC', sheetId:'7497873949990788' },
-    { name:'Ponta Delgada', code:'PDL', sheetId:'2369461508868996' }
+    { name: 'Lisbon',        code: 'LIS', sheetId: '8492262887477124' },
+    { name: 'Porto',         code: 'OPO', sheetId: '2522203786530692' },
+    { name: 'Faro',          code: 'FAO', sheetId: '7318718908419972' },
+    { name: 'Funchal',       code: 'FNC', sheetId: '6576920074342276' },
+    { name: 'Ponta Delgada', code: 'PDL', sheetId: '5922234614894468' },
   ],
-  ep: location.hostname.includes('netlify.app')
-      ? '/.netlify/functions/smartsheet'
-      : '/api/smartsheet'
 };
 
 /* ════════════════════════════════════════════

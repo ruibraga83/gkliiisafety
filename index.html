@@ -367,6 +367,92 @@
     tbody tr:hover td { background:#f8fafc; }
     .empty-row td { text-align:center; color:var(--text-muted); padding:3rem; font-size:.85rem; }
 
+    /* ── Attachment button ───────────────────────────── */
+    .attach-btn {
+      width:26px; height:26px; border-radius:.4rem; border:1px solid var(--border);
+      background:var(--surface); color:var(--text-muted); cursor:pointer; font-size:.68rem;
+      display:inline-flex; align-items:center; justify-content:center; transition:all .15s;
+    }
+    .attach-btn:hover { background:var(--primary-pale); border-color:var(--primary); color:var(--primary); }
+
+    /* ── Attachment drawer ───────────────────────────── */
+    #attachOverlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.2); z-index:6999; display:none;
+      backdrop-filter:blur(2px);
+    }
+    #attachDrawer {
+      position:fixed; right:0; top:0; bottom:0; width:380px; max-width:95vw;
+      background:var(--surface); border-left:1px solid var(--border);
+      box-shadow:var(--shadow-lg); z-index:7000;
+      display:flex; flex-direction:column;
+      transform:translateX(100%); transition:transform .25s ease;
+    }
+    #attachDrawer.open { transform:none; }
+    .attach-head {
+      padding:1rem 1.25rem; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    }
+    .attach-head-info small { display:block; font-size:.68rem; color:var(--text-muted); margin-bottom:.1rem; }
+    .attach-head h4 { font-size:.88rem; font-weight:600; }
+    .attach-close-btn { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:.25rem; transition:color .15s; }
+    .attach-close-btn:hover { color:var(--text); }
+    .attach-body { flex:1; overflow-y:auto; padding:1rem; }
+    .attach-loading { display:flex; align-items:center; gap:.6rem; color:var(--text-muted); padding:1.5rem; font-size:.83rem; }
+    .attach-item {
+      display:flex; align-items:center; gap:.75rem; padding:.75rem;
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+      margin-bottom:.5rem; transition:background .15s;
+    }
+    .attach-item:hover { background:var(--bg); }
+    .attach-icon {
+      width:34px; height:34px; border-radius:.5rem; background:var(--primary-pale);
+      display:flex; align-items:center; justify-content:center;
+      color:var(--primary); font-size:.85rem; flex-shrink:0;
+    }
+    .attach-info { flex:1; min-width:0; }
+    .attach-name { font-size:.8rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .attach-meta { font-size:.7rem; color:var(--text-muted); margin-top:.1rem; }
+    .attach-dl { color:var(--primary); font-size:.8rem; flex-shrink:0; padding:.25rem; transition:opacity .15s; }
+    .attach-dl:hover { opacity:.7; }
+    .attach-empty { text-align:center; padding:2.5rem 1rem; color:var(--text-muted); font-size:.83rem; line-height:1.6; }
+    .attach-empty i { font-size:1.75rem; opacity:.25; display:block; margin-bottom:.75rem; }
+    .attach-note { font-size:.72rem; color:var(--text-muted); padding:.75rem 1rem; border-top:1px solid var(--border); background:var(--bg); flex-shrink:0; line-height:1.5; }
+
+    /* ── Role / access ───────────────────────────────── */
+    .role-badge {
+      display:inline-flex; align-items:center; gap:.3rem; padding:.24rem .65rem;
+      border-radius:999px; font-size:.7rem; font-weight:600; white-space:nowrap;
+    }
+    .role-badge.admin   { background:#dbeafe; color:#1d4ed8; }
+    .role-badge.airport { background:var(--primary-pale); color:var(--primary-dark); }
+
+    /* ── Multi-step setup ────────────────────────────── */
+    .setup-step { display:none; }
+    .setup-step.active { display:block; }
+    .setup-back-btn {
+      width:100%; padding:.75rem; background:none; color:var(--text-muted);
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+      font-size:.88rem; font-weight:500; margin-top:.5rem; cursor:pointer; transition:all .15s;
+    }
+    .setup-back-btn:hover { background:var(--bg); color:var(--text); }
+    .role-cards { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:1.25rem; }
+    .role-card {
+      border:2px solid var(--border); border-radius:var(--radius); padding:1.1rem .9rem;
+      cursor:pointer; transition:all .15s; text-align:center;
+    }
+    .role-card:hover { border-color:var(--primary); background:var(--primary-pale); }
+    .role-card.selected { border-color:var(--primary); background:var(--primary-pale); }
+    .role-card i { font-size:1.4rem; color:var(--text-muted); margin-bottom:.5rem; display:block; }
+    .role-card.selected i { color:var(--primary); }
+    .role-card strong { font-size:.83rem; display:block; margin-bottom:.25rem; color:var(--text); }
+    .role-card small { font-size:.72rem; color:var(--text-muted); line-height:1.4; display:block; }
+    #airport-select-wrap select {
+      width:100%; padding:.7rem .9rem; border:1.5px solid var(--border);
+      border-radius:var(--radius-sm); font-size:.875rem; outline:none; font-family:inherit;
+      transition:border-color .15s;
+    }
+    #airport-select-wrap select:focus { border-color:var(--primary); }
+
     /* ── Badges ──────────────────────────────────────── */
     .badge {
       display:inline-flex; align-items:center; padding:.18rem .55rem; border-radius:999px;
@@ -448,21 +534,74 @@
   </div>
 </div>
 
-<!-- Token setup -->
+<!-- Token setup (multi-step) -->
 <div id="setupOverlay">
   <div class="setup-modal">
-    <div class="setup-modal-icon"><i class="fas fa-key"></i></div>
-    <h2>Connect to Smartsheet</h2>
-    <p>Enter your Smartsheet API token to load incident data for all Portuguese airports.</p>
-    <label for="tokenInput">API Token</label>
-    <input type="password" id="tokenInput" placeholder="Paste your Smartsheet API token…" autocomplete="off"/>
-    <button onclick="saveToken()"><i class="fas fa-plug"></i> Connect to Dashboard</button>
-    <div class="setup-error" id="setupError"></div>
+    <!-- Step 1: Token -->
+    <div class="setup-step active" id="step-token">
+      <div class="setup-modal-icon"><i class="fas fa-key"></i></div>
+      <h2>Connect to Smartsheet</h2>
+      <p>Enter your Smartsheet API token to access incident data for Portuguese airports.</p>
+      <label for="tokenInput">API Token</label>
+      <input type="password" id="tokenInput" placeholder="Paste your Smartsheet API token…" autocomplete="off"/>
+      <button onclick="stepToRole()"><i class="fas fa-arrow-right"></i> Continue</button>
+      <div class="setup-error" id="setupError"></div>
+    </div>
+    <!-- Step 2: Role & Airport -->
+    <div class="setup-step" id="step-role">
+      <div class="setup-modal-icon"><i class="fas fa-user-shield"></i></div>
+      <h2>Select Access Level</h2>
+      <p>Choose your role to configure the dashboard view.</p>
+      <div class="role-cards">
+        <div class="role-card" id="card-admin" onclick="selectRole('admin')">
+          <i class="fas fa-globe-europe"></i>
+          <strong>HQ Admin</strong>
+          <small>Full access to all airports and all incident records</small>
+        </div>
+        <div class="role-card" id="card-airport" onclick="selectRole('airport')">
+          <i class="fas fa-plane-arrival"></i>
+          <strong>Airport User</strong>
+          <small>Your airport details plus network status overview</small>
+        </div>
+      </div>
+      <div id="airport-select-wrap" style="display:none;margin-bottom:1rem;">
+        <label for="roleAirportSel">Your Airport</label>
+        <select id="roleAirportSel">
+          <option value="">— Select your airport —</option>
+          <option value="LIS">LIS – Lisbon</option>
+          <option value="OPO">OPO – Porto</option>
+          <option value="FAO">FAO – Faro</option>
+          <option value="FNC">FNC – Funchal</option>
+          <option value="PDL">PDL – Ponta Delgada</option>
+        </select>
+      </div>
+      <button onclick="connectDashboard()"><i class="fas fa-plug"></i> Connect to Dashboard</button>
+      <button class="setup-back-btn" onclick="backToToken()"><i class="fas fa-arrow-left"></i> Back</button>
+      <div class="setup-error" id="setupError2"></div>
+    </div>
   </div>
 </div>
 
 <!-- Error toast -->
 <div id="errToast"></div>
+
+<!-- Attachment overlay & drawer -->
+<div id="attachOverlay" onclick="closeAttachments()"></div>
+<div id="attachDrawer">
+  <div class="attach-head">
+    <div class="attach-head-info">
+      <small id="attachIncLabel">Incident</small>
+      <h4>Attachments</h4>
+    </div>
+    <button class="attach-close-btn" onclick="closeAttachments()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="attach-body" id="attachBody">
+    <div class="attach-empty"><i class="fas fa-paperclip"></i>Select an incident to view its attachments.</div>
+  </div>
+  <div class="attach-note">
+    <i class="fas fa-info-circle"></i> Attachments are fetched live from Smartsheet. Download links expire after 2 minutes.
+  </div>
+</div>
 
 <!-- App -->
 <div class="app">
@@ -530,6 +669,7 @@
         <p id="pageSubtitle">Aggregated safety metrics across all airports</p>
       </div>
       <div class="topbar-right">
+        <span id="roleBadge" style="display:none" class="role-badge"></span>
         <button class="btn btn-secondary" onclick="refreshData()">
           <i class="fas fa-sync-alt"></i> Refresh
         </button>
@@ -624,6 +764,7 @@
                 <th>A/C Reg</th><th>Dep</th><th>Arr</th>
                 <th>Category</th><th>Sub-Category</th>
                 <th>Risk</th><th>Status</th><th>Synopsis</th>
+                <th style="width:40px;text-align:center" title="Attachments"><i class="fas fa-paperclip"></i></th>
               </tr></thead>
               <tbody id="net-tbody"></tbody>
             </table>
@@ -831,13 +972,17 @@ const CFG = {
 };
 
 const STATE = {
-  token:    null,
-  allRows:  [],
-  charts:   {},
-  cache:    {},
-  page:     'network',
-  sortDate: { net:'desc', dash:'desc', rec:'desc' },
+  token:       null,
+  allRows:     [],
+  charts:      {},
+  cache:       {},
+  page:        'network',
+  sortDate:    { net:'desc', dash:'desc', rec:'desc' },
+  role:        'admin',
+  userAirport: null,
 };
+
+let _selectedRole = null;
 
 const MONTHS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const PALETTE = ['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'];
@@ -1191,48 +1336,58 @@ function populateFilters() {
   ['netApt','dashApt','trendApt','catApt','recApt'].forEach(id => fillSelect(id, apts, aptLbls));
   fillSelect('recSubCat', subCats);
   fillSelect('recStatus', stats, stLbls);
+  enforceAirportSelects();
 }
 
 function fv(id) { const el = document.getElementById(id); return el ? el.value : ''; }
 
 function getFiltered(page) {
   let r = [...STATE.allRows];
+  const isAirportUser = STATE.role === 'airport' && STATE.userAirport;
+
   if (page === 'network') {
+    // Airport users see full network for charts/KPIs — NO airport restriction here.
+    // Table restriction happens inside renderNetwork.
     if (fv('netYear'))  r = r.filter(x => String(x.year) === fv('netYear'));
     if (fv('netMonth')) r = r.filter(x => String(x.month) === fv('netMonth'));
     if (fv('netCat'))   r = r.filter(x => x.cat === fv('netCat'));
     if (fv('netRisk'))  r = r.filter(x => x.risk === fv('netRisk'));
-    if (fv('netApt'))   r = r.filter(x => x.airport === fv('netApt'));
-  } else if (page === 'dashboard') {
-    if (fv('dashApt'))   r = r.filter(x => x.airport === fv('dashApt'));
-    if (fv('dashYear'))  r = r.filter(x => String(x.year) === fv('dashYear'));
-    if (fv('dashMonth')) r = r.filter(x => String(x.month) === fv('dashMonth'));
-    if (fv('dashCat'))   r = r.filter(x => x.cat === fv('dashCat'));
-    if (fv('dashRisk'))  r = r.filter(x => x.risk === fv('dashRisk'));
-  } else if (page === 'trends') {
-    if (fv('trendApt'))  r = r.filter(x => x.airport === fv('trendApt'));
-    if (fv('trendYear')) r = r.filter(x => String(x.year) === fv('trendYear'));
-    if (fv('trendCat'))  r = r.filter(x => x.cat === fv('trendCat'));
-  } else if (page === 'categories') {
-    if (fv('catApt'))  r = r.filter(x => x.airport === fv('catApt'));
-    if (fv('catYear')) r = r.filter(x => String(x.year) === fv('catYear'));
-    if (fv('catRisk')) r = r.filter(x => x.risk === fv('catRisk'));
-  } else if (page === 'records') {
-    if (fv('recApt'))    r = r.filter(x => x.airport === fv('recApt'));
-    if (fv('recYear'))   r = r.filter(x => String(x.year) === fv('recYear'));
-    if (fv('recCat'))    r = r.filter(x => x.cat === fv('recCat'));
-    if (fv('recSubCat')) r = r.filter(x => x.subCat === fv('recSubCat'));
-    if (fv('recRisk'))   r = r.filter(x => x.risk === fv('recRisk'));
-    if (fv('recStatus')) r = r.filter(x => x.status === fv('recStatus'));
-    const q = fv('recSearch').toLowerCase();
-    if (q) r = r.filter(x =>
-      x.synopsis.toLowerCase().includes(q) ||
-      x.cat.toLowerCase().includes(q) ||
-      x.incNo.toLowerCase().includes(q) ||
-      x.acReg.toLowerCase().includes(q) ||
-      x.depApt.toLowerCase().includes(q) ||
-      x.arrApt.toLowerCase().includes(q)
-    );
+    if (!isAirportUser && fv('netApt')) r = r.filter(x => x.airport === fv('netApt'));
+  } else {
+    // All other pages: airport users are restricted to their airport
+    if (isAirportUser) r = r.filter(x => x.airport === STATE.userAirport);
+
+    if (page === 'dashboard') {
+      if (!isAirportUser && fv('dashApt'))   r = r.filter(x => x.airport === fv('dashApt'));
+      if (fv('dashYear'))  r = r.filter(x => String(x.year) === fv('dashYear'));
+      if (fv('dashMonth')) r = r.filter(x => String(x.month) === fv('dashMonth'));
+      if (fv('dashCat'))   r = r.filter(x => x.cat === fv('dashCat'));
+      if (fv('dashRisk'))  r = r.filter(x => x.risk === fv('dashRisk'));
+    } else if (page === 'trends') {
+      if (!isAirportUser && fv('trendApt'))  r = r.filter(x => x.airport === fv('trendApt'));
+      if (fv('trendYear')) r = r.filter(x => String(x.year) === fv('trendYear'));
+      if (fv('trendCat'))  r = r.filter(x => x.cat === fv('trendCat'));
+    } else if (page === 'categories') {
+      if (!isAirportUser && fv('catApt'))  r = r.filter(x => x.airport === fv('catApt'));
+      if (fv('catYear')) r = r.filter(x => String(x.year) === fv('catYear'));
+      if (fv('catRisk')) r = r.filter(x => x.risk === fv('catRisk'));
+    } else if (page === 'records') {
+      if (!isAirportUser && fv('recApt')) r = r.filter(x => x.airport === fv('recApt'));
+      if (fv('recYear'))   r = r.filter(x => String(x.year) === fv('recYear'));
+      if (fv('recCat'))    r = r.filter(x => x.cat === fv('recCat'));
+      if (fv('recSubCat')) r = r.filter(x => x.subCat === fv('recSubCat'));
+      if (fv('recRisk'))   r = r.filter(x => x.risk === fv('recRisk'));
+      if (fv('recStatus')) r = r.filter(x => x.status === fv('recStatus'));
+      const q = fv('recSearch').toLowerCase();
+      if (q) r = r.filter(x =>
+        x.synopsis.toLowerCase().includes(q) ||
+        x.cat.toLowerCase().includes(q) ||
+        x.incNo.toLowerCase().includes(q) ||
+        x.acReg.toLowerCase().includes(q) ||
+        x.depApt.toLowerCase().includes(q) ||
+        x.arrApt.toLowerCase().includes(q)
+      );
+    }
   }
   return r;
 }
@@ -1313,7 +1468,7 @@ function renderTbl(tbodyId, countId, rows, tableKey) {
   if (tableKey) applySortToHeader(tableKey);
   if (ct) ct.textContent = `${sorted.length} incident${sorted.length !== 1 ? 's' : ''}`;
   if (!sorted.length) {
-    tb.innerHTML = '<tr class="empty-row"><td colspan="11">No incidents match the selected filters.</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="12">No incidents match the selected filters.</td></tr>';
     return;
   }
   tb.innerHTML = sorted.map(r => `
@@ -1329,6 +1484,11 @@ function renderTbl(tbodyId, countId, rows, tableKey) {
       <td>${riskBadge(r.risk, r.riskRaw)}</td>
       <td>${statusBadge(r.status)}</td>
       <td style="max-width:260px;color:var(--text-sec)">${r.synopsis}</td>
+      <td style="text-align:center">
+        <button class="attach-btn" title="View attachments"
+          data-airport="${r.airport}" data-rowid="${r.id}" data-incno="${r.incNo}"
+          onclick="showAttachments(this)"><i class="fas fa-paperclip"></i></button>
+      </td>
     </tr>`).join('');
 }
 
@@ -1354,7 +1514,11 @@ function renderNetwork(rows) {
   const cd = Object.entries(countBy(rows, 'cat')).sort((a,b) => b[1]-a[1]).slice(0,8);
   mkChart('ch-net-cat', {type:'bar', data:{labels:cd.map(c => c[0]), datasets:[{label:'Incidents', data:cd.map(c => c[1]), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({indexAxis:'y', plugins:{legend:{display:false}}})});
 
-  renderTbl('net-tbody', 'net-tbl-count', rows, 'net');
+  // Airport users see full network charts/KPIs, but only their airport in the table
+  const tableRows = (STATE.role === 'airport' && STATE.userAirport)
+    ? rows.filter(r => r.airport === STATE.userAirport)
+    : rows;
+  renderTbl('net-tbody', 'net-tbl-count', tableRows, 'net');
 }
 
 function renderDashboard(rows) {
@@ -1446,7 +1610,10 @@ function buildAirportList() {
   const list = document.getElementById('airportList');
   if (!list) return;
   list.innerHTML = '';
-  CFG.airports.forEach((apt, idx) => {
+  const visible = STATE.role === 'airport'
+    ? CFG.airports.filter(a => a.code === STATE.userAirport)
+    : CFG.airports;
+  visible.forEach((apt, idx) => {
     const count = (STATE.cache[apt.code]||[]).length;
     const btn = document.createElement('button');
     btn.className = 'apt-btn';
@@ -1475,34 +1642,184 @@ function toggleDebug() {
   p.style.display = p.style.display === 'block' ? 'none' : 'block';
 }
 
-function saveToken() {
+// ── Setup flow ────────────────────────────────────────────────
+function stepToRole() {
   const t     = document.getElementById('tokenInput').value.trim();
   const errEl = document.getElementById('setupError');
   if (!t) { errEl.textContent = 'Please paste your API token.'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
   STATE.token = t;
-  localStorage.setItem('gl3_token', t);
+  document.getElementById('step-token').classList.remove('active');
+  document.getElementById('step-role').classList.add('active');
+}
+
+function backToToken() {
+  document.getElementById('step-role').classList.remove('active');
+  document.getElementById('step-token').classList.add('active');
+  _selectedRole = null;
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('airport-select-wrap').style.display = 'none';
+  const e2 = document.getElementById('setupError2');
+  if (e2) e2.style.display = 'none';
+}
+
+function selectRole(role) {
+  _selectedRole = role;
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`card-${role}`).classList.add('selected');
+  document.getElementById('airport-select-wrap').style.display = role === 'airport' ? 'block' : 'none';
+}
+
+function connectDashboard() {
+  const errEl = document.getElementById('setupError2');
+  if (!_selectedRole) { errEl.textContent = 'Please select your access level.'; errEl.style.display = 'block'; return; }
+  let aptCode = null;
+  if (_selectedRole === 'airport') {
+    aptCode = document.getElementById('roleAirportSel').value;
+    if (!aptCode) { errEl.textContent = 'Please select your airport.'; errEl.style.display = 'block'; return; }
+  }
+  errEl.style.display = 'none';
+  STATE.role        = _selectedRole;
+  STATE.userAirport = aptCode;
+  localStorage.setItem('gl3_token',   STATE.token);
+  localStorage.setItem('gl3_role',    STATE.role);
+  localStorage.setItem('gl3_airport', aptCode || '');
   document.getElementById('setupOverlay').style.display = 'none';
-  document.getElementById('splash').style.display = 'flex';
-  document.getElementById('splash').style.opacity  = '1';
+  const splash = document.getElementById('splash');
+  splash.style.display  = 'flex';
+  splash.style.opacity  = '1';
+  applyUserAccess();
   loadAll();
 }
 
 function clearToken() {
   localStorage.removeItem('gl3_token');
-  STATE.token   = null;
-  STATE.allRows = [];
-  STATE.cache   = {};
+  localStorage.removeItem('gl3_role');
+  localStorage.removeItem('gl3_airport');
+  STATE.token       = null;
+  STATE.role        = 'admin';
+  STATE.userAirport = null;
+  STATE.allRows     = [];
+  STATE.cache       = {};
+  _selectedRole     = null;
+  document.getElementById('step-role').classList.remove('active');
+  document.getElementById('step-token').classList.add('active');
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('airport-select-wrap').style.display = 'none';
+  document.getElementById('roleBadge').style.display = 'none';
   document.getElementById('setupOverlay').style.display = 'flex';
+}
+
+// ── Access control ────────────────────────────────────────────
+function applyUserAccess() {
+  const badge = document.getElementById('roleBadge');
+  if (badge) {
+    badge.style.display = '';
+    if (STATE.role === 'admin') {
+      badge.className = 'role-badge admin';
+      badge.innerHTML = '<i class="fas fa-globe-europe"></i> HQ Admin';
+    } else {
+      badge.className = 'role-badge airport';
+      badge.innerHTML = `<i class="fas fa-plane"></i> ${STATE.userAirport || 'Airport'}`;
+    }
+  }
+  enforceAirportSelects();
+}
+
+function enforceAirportSelects() {
+  const aptIds = ['netApt','dashApt','trendApt','catApt','recApt'];
+  const hide   = STATE.role === 'airport';
+  aptIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hide ? 'none' : '';
+  });
+}
+
+// ── Attachments ───────────────────────────────────────────────
+async function showAttachments(btn) {
+  const airportCode = btn.dataset.airport;
+  const rowId       = btn.dataset.rowid;
+  const incNo       = btn.dataset.incno;
+
+  const label = document.getElementById('attachIncLabel');
+  const body  = document.getElementById('attachBody');
+  if (label) label.textContent = incNo;
+  body.innerHTML = '<div class="attach-loading"><div class="mini-spin"></div> Fetching attachments…</div>';
+  document.getElementById('attachDrawer').classList.add('open');
+  document.getElementById('attachOverlay').style.display = 'block';
+
+  const attachments = await fetchAttachments(airportCode, rowId);
+
+  if (!attachments.length) {
+    body.innerHTML = '<div class="attach-empty"><i class="fas fa-paperclip"></i>No attachments found for this incident.</div>';
+    return;
+  }
+
+  body.innerHTML = attachments.map(a => {
+    const icon = attachIcon(a.attachmentType, a.mimeType);
+    const size = a.sizeInKb ? `${a.sizeInKb} KB` : '';
+    const meta = [size, a.attachmentType].filter(Boolean).join(' · ');
+    const href = a.url ? `href="${a.url}" target="_blank"` : '';
+    return `
+      <div class="attach-item">
+        <div class="attach-icon"><i class="${icon}"></i></div>
+        <div class="attach-info">
+          <div class="attach-name" title="${a.name}">${a.name}</div>
+          <div class="attach-meta">${meta || 'File'}</div>
+        </div>
+        <a ${href} class="attach-dl" title="Download / Open"><i class="fas fa-external-link-alt"></i></a>
+      </div>`;
+  }).join('');
+}
+
+async function fetchAttachments(airportCode, rowId) {
+  const apt = CFG.airports.find(a => a.code === airportCode);
+  if (!apt) return [];
+  try {
+    const res = await fetch(CFG.endpoint, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token: STATE.token, sheetId: apt.sheetId, rowId: String(rowId), action: 'attachments' }),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.data || data.attachments || [];
+  } catch(e) {
+    dbg(`fetchAttachments error: ${e.message}`, undefined, 'err');
+    return [];
+  }
+}
+
+function attachIcon(type, mime) {
+  if (type === 'LINK') return 'fas fa-link';
+  if (!mime)           return 'fas fa-file';
+  if (mime.includes('pdf'))                            return 'fas fa-file-pdf';
+  if (mime.includes('image'))                          return 'fas fa-file-image';
+  if (mime.includes('word') || mime.includes('document')) return 'fas fa-file-word';
+  if (mime.includes('sheet') || mime.includes('excel'))   return 'fas fa-file-excel';
+  if (mime.includes('zip') || mime.includes('compress'))  return 'fas fa-file-archive';
+  if (mime.includes('video'))                          return 'fas fa-file-video';
+  return 'fas fa-file';
+}
+
+function closeAttachments() {
+  document.getElementById('attachDrawer').classList.remove('open');
+  document.getElementById('attachOverlay').style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════
 // 15. INIT
 // ═══════════════════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  const saved = localStorage.getItem('gl3_token');
-  if (saved) {
-    STATE.token = saved;
+  const savedToken   = localStorage.getItem('gl3_token');
+  const savedRole    = localStorage.getItem('gl3_role');
+  const savedAirport = localStorage.getItem('gl3_airport');
+
+  if (savedToken && savedRole) {
+    STATE.token       = savedToken;
+    STATE.role        = savedRole;
+    STATE.userAirport = savedAirport || null;
+    applyUserAccess();
     loadAll();
   } else {
     document.getElementById('splash').style.display = 'none';

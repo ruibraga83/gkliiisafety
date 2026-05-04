@@ -3,202 +3,453 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Groundlink III Safety Dashboard</title>
+  <title>Groundlink III — Safety Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    :root{
-      --primary:#6366f1;--primary-dark:#4f46e5;--primary-light:#818cf8;
-      --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;
-      --bg:#f8fafc;--surface:#fff;--text:#0f172a;--text-sec:#64748b;--text-muted:#94a3b8;
-      --border:#e2e8f0;--border-light:#f1f5f9;
-      --c-neg:#6b7280;--c-low:#65a30d;--c-high:#ea580c;--c-crit:#dc2626;
-      --c-open:#2563eb;--c-prog:#d97706;--c-closed:#059669;
-      --sidebar-w:260px;
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --primary:        #6366f1;
+      --primary-dark:   #4f46e5;
+      --primary-deeper: #3730a3;
+      --primary-light:  #818cf8;
+      --primary-pale:   #eef2ff;
+
+      --success:  #10b981; --success-pale: #d1fae5;
+      --warning:  #f59e0b; --warning-pale: #fef3c7;
+      --danger:   #ef4444; --danger-pale:  #fee2e2;
+      --info:     #3b82f6; --info-pale:    #dbeafe;
+
+      --c-neg:    #6b7280; --c-neg-pale:   #f3f4f6;
+      --c-low:    #65a30d; --c-low-pale:   #f0fdf4;
+      --c-high:   #ea580c; --c-high-pale:  #fff7ed;
+      --c-crit:   #dc2626; --c-crit-pale:  #fef2f2;
+      --c-open:   #2563eb; --c-open-pale:  #eff6ff;
+      --c-prog:   #d97706; --c-prog-pale:  #fffbeb;
+      --c-closed: #059669; --c-closed-pale:#f0fdf4;
+
+      --sb-bg:    #1e1b4b;
+      --sb-hover: rgba(255,255,255,.08);
+      --sb-active:rgba(255,255,255,.14);
+      --sb-text:  #c7d2fe;
+      --sb-muted: #818cf8;
+      --sb-border:rgba(255,255,255,.08);
+
+      --bg:           #f1f5f9;
+      --surface:      #ffffff;
+      --text:         #0f172a;
+      --text-sec:     #475569;
+      --text-muted:   #94a3b8;
+      --border:       #e2e8f0;
+      --border-light: #f1f5f9;
+      --shadow-sm:    0 1px 2px rgba(0,0,0,.05);
+      --shadow:       0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.05);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,.12);
+
+      --sidebar-w: 264px;
+      --topbar-h:  64px;
+      --radius:    .75rem;
+      --radius-sm: .5rem;
     }
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
 
-    /* Splash */
-    #splash{position:fixed;inset:0;background:var(--primary-dark);display:flex;flex-direction:column;
-      align-items:center;justify-content:center;z-index:9999;gap:1.5rem;transition:opacity .4s;}
-    #splash img{width:140px;}
-    #splash p{color:#c7d2fe;font-size:.95rem;}
-    .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);
-      border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; font-size:14px; line-height:1.5; }
+    a { color:inherit; text-decoration:none; }
+    button { font-family:inherit; cursor:pointer; }
 
-    /* Setup */
-    #setupOverlay{position:fixed;inset:0;background:rgba(15,23,42,.75);display:none;
-      align-items:center;justify-content:center;z-index:9000;}
-    .setup-modal{background:#fff;border-radius:1rem;padding:2.5rem;width:440px;max-width:92vw;
-      box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
-    .setup-modal h2{font-size:1.4rem;margin-bottom:.5rem;}
-    .setup-modal p{color:var(--text-sec);margin-bottom:1.5rem;font-size:.88rem;}
-    .setup-modal input{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);
-      border-radius:.5rem;font-size:.95rem;margin-bottom:1rem;outline:none;font-family:monospace;}
-    .setup-modal input:focus{border-color:var(--primary);}
-    .setup-modal button{width:100%;padding:.8rem;background:var(--primary);color:#fff;
-      border:none;border-radius:.5rem;font-size:1rem;font-weight:600;cursor:pointer;}
-    .setup-modal button:hover{background:var(--primary-dark);}
-    .setup-error{color:var(--danger);font-size:.82rem;margin-top:.5rem;display:none;}
+    /* ── Splash ─────────────────────────────────────── */
+    #splash {
+      position:fixed; inset:0; z-index:9999;
+      background:linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #4338ca 100%);
+      display:flex; align-items:center; justify-content:center;
+      transition:opacity .5s ease;
+    }
+    .splash-glass {
+      background:rgba(255,255,255,.08);
+      backdrop-filter:blur(24px);
+      -webkit-backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:1.5rem;
+      padding:3rem 3.5rem;
+      text-align:center;
+      display:flex; flex-direction:column; align-items:center; gap:1.5rem;
+      box-shadow:0 24px 64px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+      min-width:320px;
+    }
+    .splash-logo {
+      width:100px; height:100px; object-fit:contain;
+      filter:brightness(0) invert(1);
+      drop-shadow:0 4px 16px rgba(99,102,241,.5);
+    }
+    .splash-title {
+      color:#fff; font-size:1.35rem; font-weight:700; letter-spacing:-.02em; line-height:1.3;
+    }
+    .splash-title span { display:block; color:#a5b4fc; font-size:.85rem; font-weight:400; margin-top:.25rem; }
+    #splashMsg { color:#c7d2fe; font-size:.85rem; min-height:1.2em; }
+    .splash-dots { display:flex; gap:.5rem; }
+    .splash-dot {
+      width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3);
+      animation:pulse-dot 1.4s ease-in-out infinite;
+    }
+    .splash-dot:nth-child(2){animation-delay:.2s;}
+    .splash-dot:nth-child(3){animation-delay:.4s;}
+    @keyframes pulse-dot {
+      0%,80%,100%{background:rgba(255,255,255,.25); transform:scale(1);}
+      40%{background:#818cf8; transform:scale(1.3);}
+    }
 
-    /* Layout */
-    .app{display:flex;height:100vh;overflow:hidden;}
-    .sidebar{width:var(--sidebar-w);background:var(--primary-dark);display:flex;
-      flex-direction:column;flex-shrink:0;overflow-y:auto;}
-    .sb-head{padding:1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1);
-      display:flex;align-items:center;gap:.75rem;}
-    .sb-head img{width:36px;height:36px;object-fit:contain;}
-    .sb-head span{color:#fff;font-weight:700;font-size:.95rem;line-height:1.3;}
-    .sb-nav{padding:.75rem 0;flex:1;}
-    .sb-section{padding:.5rem 1rem .25rem;color:#a5b4fc;font-size:.7rem;
-      font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:.25rem;}
-    .nav-item{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;
-      color:#c7d2fe;font-size:.875rem;cursor:pointer;transition:all .15s;
-      border:none;background:none;width:100%;text-align:left;}
-    .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
-    .nav-item.active{background:rgba(255,255,255,.15);color:#fff;font-weight:600;}
-    .nav-item i{width:18px;text-align:center;font-size:.85rem;}
-    .apt-btn{display:flex;align-items:center;gap:.6rem;padding:.45rem 1rem;
-      color:#a5b4fc;font-size:.8rem;cursor:pointer;transition:all .15s;
-      border:none;background:none;width:100%;text-align:left;}
-    .apt-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
-    .apt-code{background:rgba(255,255,255,.15);padding:.1rem .4rem;border-radius:.25rem;
-      font-size:.7rem;font-weight:700;color:#fff;font-family:monospace;}
+    /* ── Setup Modal ─────────────────────────────────── */
+    #setupOverlay {
+      position:fixed; inset:0; background:rgba(15,23,42,.7);
+      backdrop-filter:blur(8px);
+      display:none; align-items:center; justify-content:center; z-index:9000;
+    }
+    .setup-modal {
+      background:#fff; border-radius:1.25rem; padding:2.5rem;
+      width:460px; max-width:92vw;
+      box-shadow:0 24px 64px rgba(0,0,0,.25);
+    }
+    .setup-modal-icon {
+      width:56px; height:56px; border-radius:14px;
+      background:var(--primary-pale); display:flex; align-items:center; justify-content:center;
+      margin:0 auto 1.25rem; font-size:1.4rem; color:var(--primary);
+    }
+    .setup-modal h2 { font-size:1.25rem; font-weight:700; text-align:center; margin-bottom:.5rem; }
+    .setup-modal p  { color:var(--text-sec); font-size:.85rem; text-align:center; margin-bottom:1.75rem; line-height:1.6; }
+    .setup-modal label { display:block; font-size:.75rem; font-weight:600; color:var(--text-sec); margin-bottom:.4rem; text-transform:uppercase; letter-spacing:.04em; }
+    .setup-modal input {
+      width:100%; padding:.75rem 1rem; border:1.5px solid var(--border);
+      border-radius:var(--radius-sm); font-size:.9rem; margin-bottom:1rem;
+      outline:none; font-family:'JetBrains Mono',monospace; color:var(--text);
+      transition:border-color .15s;
+    }
+    .setup-modal input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+    .setup-modal button {
+      width:100%; padding:.85rem; background:var(--primary); color:#fff;
+      border:none; border-radius:var(--radius-sm); font-size:.9rem; font-weight:600;
+      transition:background .15s, transform .1s;
+    }
+    .setup-modal button:hover  { background:var(--primary-dark); }
+    .setup-modal button:active { transform:scale(.98); }
+    .setup-error { color:var(--danger); font-size:.8rem; margin-top:.75rem; display:none; padding:.6rem .9rem; background:var(--danger-pale); border-radius:.4rem; }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .app { display:flex; height:100vh; overflow:hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width:var(--sidebar-w); background:var(--sb-bg);
+      display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto;
+      scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.1) transparent;
+    }
+    .sb-head {
+      padding:1.25rem 1rem; border-bottom:1px solid var(--sb-border);
+      display:flex; align-items:center; gap:.75rem; flex-shrink:0;
+    }
+    .sb-logo-wrap {
+      width:38px; height:38px; border-radius:10px;
+      background:rgba(255,255,255,.1);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .sb-logo-wrap img { width:26px; height:26px; object-fit:contain; filter:brightness(0) invert(1); }
+    .sb-head-text { flex:1; min-width:0; }
+    .sb-head-text strong { display:block; color:#fff; font-size:.875rem; font-weight:700; line-height:1.2; }
+    .sb-head-text small  { color:var(--sb-muted); font-size:.72rem; }
+
+    .sb-nav { padding:.5rem 0; flex:1; }
+    .sb-section {
+      padding:.75rem 1rem .3rem; color:var(--sb-muted);
+      font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
+      margin-top:.25rem;
+    }
+    .nav-item {
+      display:flex; align-items:center; gap:.7rem; padding:.6rem .875rem;
+      color:var(--sb-text); font-size:.83rem; cursor:pointer; transition:all .15s;
+      border:none; background:none; width:100%; text-align:left; border-radius:0;
+      position:relative;
+    }
+    .nav-item:hover  { background:var(--sb-hover); color:#fff; }
+    .nav-item.active {
+      background:var(--sb-active); color:#fff; font-weight:600;
+    }
+    .nav-item.active::before {
+      content:''; position:absolute; left:0; top:20%; bottom:20%;
+      width:3px; background:var(--primary-light); border-radius:0 2px 2px 0;
+    }
+    .nav-item i { width:16px; text-align:center; font-size:.82rem; flex-shrink:0; }
+
+    .apt-btn {
+      display:flex; align-items:center; gap:.6rem; padding:.45rem .875rem;
+      color:var(--sb-muted); font-size:.8rem; cursor:pointer; transition:all .15s;
+      border:none; background:none; width:100%; text-align:left;
+    }
+    .apt-btn:hover { background:var(--sb-hover); color:#fff; }
+    .apt-code {
+      background:rgba(255,255,255,.12); padding:.1rem .42rem; border-radius:.3rem;
+      font-size:.68rem; font-weight:700; color:#fff; font-family:'JetBrains Mono',monospace;
+    }
+    .apt-count { margin-left:auto; color:var(--sb-muted); font-size:.72rem; font-variant-numeric:tabular-nums; }
+
+    .sb-footer {
+      padding:.75rem; border-top:1px solid var(--sb-border); flex-shrink:0;
+    }
+    .sb-version { color:rgba(255,255,255,.25); font-size:.68rem; text-align:center; }
 
     /* Main */
-    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-    .topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 1.5rem;
-      height:64px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-    .topbar-left h1{font-size:1.15rem;font-weight:700;}
-    .topbar-left p{font-size:.78rem;color:var(--text-sec);}
-    .topbar-right{display:flex;gap:.5rem;}
-    .btn{padding:.48rem .9rem;border-radius:.5rem;font-size:.82rem;font-weight:500;
-      cursor:pointer;border:none;display:inline-flex;align-items:center;gap:.35rem;transition:all .15s;}
-    .btn-primary{background:var(--primary);color:#fff;}
-    .btn-primary:hover{background:var(--primary-dark);}
-    .btn-secondary{background:var(--border-light);color:var(--text-sec);border:1px solid var(--border);}
-    .btn-secondary:hover{background:var(--border);}
-    .btn-danger{background:#fef2f2;color:var(--danger);border:1px solid #fecaca;}
-    .btn-danger:hover{background:#fee2e2;}
-    .content{flex:1;overflow-y:auto;padding:1.5rem;}
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+
+    .topbar {
+      background:var(--surface); border-bottom:1px solid var(--border);
+      padding:0 1.5rem; height:var(--topbar-h);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+      box-shadow:var(--shadow-sm);
+    }
+    .topbar-left h1 { font-size:1.05rem; font-weight:700; letter-spacing:-.01em; }
+    .topbar-left p  { font-size:.75rem; color:var(--text-muted); margin-top:.1rem; }
+    .topbar-right   { display:flex; gap:.5rem; align-items:center; }
+
+    .btn {
+      padding:.46rem .9rem; border-radius:var(--radius-sm); font-size:.8rem; font-weight:500;
+      cursor:pointer; border:none; display:inline-flex; align-items:center; gap:.35rem;
+      transition:all .15s; white-space:nowrap;
+    }
+    .btn i { font-size:.75rem; }
+    .btn-primary   { background:var(--primary); color:#fff; }
+    .btn-primary:hover { background:var(--primary-dark); }
+    .btn-secondary { background:var(--border-light); color:var(--text-sec); border:1px solid var(--border); }
+    .btn-secondary:hover { background:var(--border); }
+    .btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
+    .btn-ghost:hover { background:var(--bg); color:var(--text); }
+
+    .content { flex:1; overflow-y:auto; padding:1.5rem; }
 
     /* Pages */
-    .page{display:none;animation:fadeIn .2s ease;}
-    .page.active{display:block;}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+    .page { display:none; animation:fadeIn .2s ease; }
+    .page.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;} }
 
-    /* Risk legend */
-    .risk-legend{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
-      background:#fff;padding:.75rem 1rem;border-radius:.5rem;
-      border:1px solid var(--border);margin-bottom:1.25rem;font-size:.8rem;color:var(--text-sec);}
-    .risk-legend>span{font-weight:600;color:var(--text);}
-    .rl-item{display:flex;align-items:center;gap:.35rem;}
-    .rl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    /* ── Risk legend ─────────────────────────────────── */
+    .risk-legend {
+      display:flex; align-items:center; gap:.875rem; flex-wrap:wrap;
+      background:var(--surface); padding:.7rem 1rem; border-radius:var(--radius-sm);
+      border:1px solid var(--border); margin-bottom:1.25rem; font-size:.78rem; color:var(--text-sec);
+      box-shadow:var(--shadow-sm);
+    }
+    .risk-legend > span { font-weight:600; color:var(--text); font-size:.78rem; }
+    .rl-item { display:flex; align-items:center; gap:.3rem; }
+    .rl-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-    /* Loading banner */
-    .load-bar{background:#eff6ff;border:1px solid #bfdbfe;border-radius:.5rem;
-      padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.85rem;color:#1d4ed8;
-      display:none;align-items:center;gap:.5rem;}
-    .load-bar.show{display:flex;}
+    /* ── Loading bar ─────────────────────────────────── */
+    .load-bar {
+      background:var(--info-pale); border:1px solid #bfdbfe; border-radius:var(--radius-sm);
+      padding:.7rem 1rem; margin-bottom:1.25rem; font-size:.82rem; color:#1d4ed8;
+      display:none; align-items:center; gap:.6rem; box-shadow:var(--shadow-sm);
+    }
+    .load-bar.show { display:flex; }
+    .mini-spin {
+      width:14px; height:14px; border:2px solid rgba(29,78,216,.2);
+      border-top-color:#1d4ed8; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0;
+    }
+    @keyframes spin { to{transform:rotate(360deg);} }
 
-    /* Filter bar */
-    .filter-bar{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.25rem;}
-    .filter-bar select,.filter-bar input{
-      padding:.42rem .7rem;border:1.5px solid var(--border);border-radius:.5rem;
-      font-size:.82rem;color:var(--text);background:#fff;outline:none;cursor:pointer;}
-    .filter-bar select:focus,.filter-bar input:focus{border-color:var(--primary);}
-    .filter-bar input{flex:1;min-width:180px;}
+    /* ── Filter bar ──────────────────────────────────── */
+    .filter-bar { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .filter-bar select, .filter-bar input {
+      padding:.44rem .75rem; border:1.5px solid var(--border); border-radius:var(--radius-sm);
+      font-size:.8rem; color:var(--text); background:var(--surface); outline:none; cursor:pointer;
+      font-family:inherit; transition:border-color .15s, box-shadow .15s;
+    }
+    .filter-bar select:focus, .filter-bar input:focus {
+      border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,.1);
+    }
+    .filter-bar input { flex:1; min-width:180px; cursor:text; }
 
-    /* KPI */
-    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.25rem;}
-    .kpi-card{background:#fff;border-radius:.75rem;padding:1.2rem;
-      border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05);}
-    .kpi-label{font-size:.72rem;color:var(--text-sec);font-weight:600;text-transform:uppercase;
-      letter-spacing:.05em;margin-bottom:.4rem;}
-    .kpi-value{font-size:1.9rem;font-weight:700;line-height:1;}
-    .kpi-sub{font-size:.72rem;color:var(--text-muted);margin-top:.3rem;}
-    .kpi-crit .kpi-value{color:var(--c-crit);}
-    .kpi-high .kpi-value{color:var(--c-high);}
-    .kpi-open .kpi-value{color:var(--c-open);}
+    /* ── KPI grid ────────────────────────────────────── */
+    .kpi-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:1rem; margin-bottom:1.25rem;
+    }
+    .kpi-card {
+      background:var(--surface); border-radius:var(--radius);
+      padding:1.2rem 1.25rem; border:1px solid var(--border);
+      box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
+      transition:box-shadow .2s, transform .2s;
+    }
+    .kpi-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+    .kpi-card::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+      background:var(--border);
+    }
+    .kpi-card.kpi-crit::before { background:var(--c-crit); }
+    .kpi-card.kpi-high::before { background:var(--c-high); }
+    .kpi-card.kpi-open::before { background:var(--c-open); }
+    .kpi-card.kpi-success::before { background:var(--success); }
+    .kpi-card.kpi-warn::before { background:var(--warning); }
 
-    /* Charts */
-    .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;margin-bottom:1.25rem;}
-    .chart-card{background:#fff;border-radius:.75rem;padding:1.25rem;
-      border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05);}
-    .chart-card h3{font-size:.88rem;font-weight:600;margin-bottom:1rem;color:var(--text);}
-    .chart-wrap{position:relative;height:230px;}
+    .kpi-icon {
+      width:34px; height:34px; border-radius:.6rem; display:flex; align-items:center;
+      justify-content:center; font-size:.9rem; margin-bottom:.9rem; background:var(--border-light);
+    }
+    .kpi-card.kpi-crit .kpi-icon { background:var(--c-crit-pale); color:var(--c-crit); }
+    .kpi-card.kpi-high .kpi-icon { background:var(--c-high-pale); color:var(--c-high); }
+    .kpi-card.kpi-open .kpi-icon { background:var(--c-open-pale); color:var(--c-open); }
+    .kpi-card.kpi-success .kpi-icon { background:var(--success-pale); color:var(--success); }
+    .kpi-card.kpi-warn .kpi-icon { background:var(--warning-pale); color:var(--warning); }
 
-    /* Tables */
-    .table-card{background:#fff;border-radius:.75rem;border:1px solid var(--border);
-      box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;margin-bottom:1rem;}
-    .table-head{padding:.9rem 1.25rem;border-bottom:1px solid var(--border);
-      display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;}
-    .table-head h3{font-size:.88rem;font-weight:600;}
-    .tbl-count{font-size:.78rem;color:var(--text-sec);}
-    .tbl-wrap{overflow-x:auto;max-height:480px;overflow-y:auto;}
-    table{width:100%;border-collapse:collapse;font-size:.8rem;}
-    thead{position:sticky;top:0;z-index:1;}
-    thead tr{background:#f8fafc;}
-    th{padding:.6rem .75rem;text-align:left;font-weight:600;color:var(--text-sec);
-      font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;
-      border-bottom:1px solid var(--border);}
-    td{padding:.6rem .75rem;border-bottom:1px solid var(--border-light);vertical-align:top;}
-    tr:last-child td{border-bottom:none;}
-    tr:hover td{background:#fafafa;}
-    .empty-row td{text-align:center;color:var(--text-muted);padding:2.5rem;}
+    .kpi-label {
+      font-size:.68rem; color:var(--text-muted); font-weight:600;
+      text-transform:uppercase; letter-spacing:.07em; margin-bottom:.35rem;
+    }
+    .kpi-value {
+      font-size:2rem; font-weight:800; line-height:1; letter-spacing:-.03em;
+      font-variant-numeric:tabular-nums;
+    }
+    .kpi-card.kpi-crit  .kpi-value { color:var(--c-crit); }
+    .kpi-card.kpi-high  .kpi-value { color:var(--c-high); }
+    .kpi-card.kpi-open  .kpi-value { color:var(--c-open); }
+    .kpi-card.kpi-success .kpi-value { color:var(--success); }
+    .kpi-card.kpi-warn  .kpi-value { color:var(--warning); }
+    .kpi-sub  { font-size:.7rem; color:var(--text-muted); margin-top:.3rem; }
 
-    /* Badges */
-    .badge{display:inline-flex;align-items:center;padding:.18rem .52rem;border-radius:999px;
-      font-size:.7rem;font-weight:600;white-space:nowrap;}
-    .b-neg{background:#f3f4f6;color:var(--c-neg);}
-    .b-low{background:#f0fdf4;color:var(--c-low);}
-    .b-high{background:#fff7ed;color:var(--c-high);}
-    .b-crit{background:#fef2f2;color:var(--c-crit);}
-    .b-unk{background:#f3f4f6;color:#6b7280;}
-    .b-open{background:#eff6ff;color:var(--c-open);}
-    .b-prog{background:#fffbeb;color:var(--c-prog);}
-    .b-closed{background:#f0fdf4;color:var(--c-closed);}
-    .apt-tag{background:var(--primary);color:#fff;padding:.12rem .4rem;border-radius:.25rem;
-      font-size:.68rem;font-weight:700;font-family:monospace;}
+    /* ── Charts ──────────────────────────────────────── */
+    .chart-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:1rem; margin-bottom:1.25rem;
+    }
+    .chart-card {
+      background:var(--surface); border-radius:var(--radius);
+      padding:1.25rem; border:1px solid var(--border); box-shadow:var(--shadow-sm);
+    }
+    .chart-card-head {
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;
+    }
+    .chart-card h3 { font-size:.84rem; font-weight:600; color:var(--text); }
+    .chart-wrap { position:relative; height:220px; }
 
-    /* Debug panel */
-    #dbgPanel{position:fixed;bottom:1rem;right:1rem;background:#0f172a;color:#e2e8f0;
-      border-radius:.75rem;padding:1rem 1.25rem;width:380px;max-height:420px;
-      overflow-y:auto;font-size:.73rem;z-index:8000;display:none;
-      box-shadow:0 8px 32px rgba(0,0,0,.5);font-family:monospace;}
-    #dbgPanel h4{color:#818cf8;margin-bottom:.6rem;font-size:.82rem;font-family:'Inter',sans-serif;}
-    #dbgPanel .dbg-line{padding:.18rem 0;border-bottom:1px solid #1e293b;word-break:break-all;}
-    #dbgPanel .dbg-line:last-child{border:none;}
-    #dbgPanel .dbg-err{color:#f87171;}
-    #dbgPanel .dbg-ok{color:#34d399;}
-    #dbgPanel .dbg-info{color:#93c5fd;}
+    /* ── Tables ──────────────────────────────────────── */
+    .table-card {
+      background:var(--surface); border-radius:var(--radius); border:1px solid var(--border);
+      box-shadow:var(--shadow-sm); overflow:hidden; margin-bottom:1rem;
+    }
+    .table-head {
+      padding:.9rem 1.25rem; border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center; gap:.5rem; flex-wrap:wrap;
+      background:var(--bg);
+    }
+    .table-head h3 { font-size:.84rem; font-weight:600; }
+    .tbl-count { font-size:.75rem; color:var(--text-muted); background:var(--border-light); padding:.2rem .6rem; border-radius:999px; border:1px solid var(--border); }
 
-    /* Error toast */
-    #errToast{position:fixed;top:1rem;right:1rem;background:#fef2f2;border:1px solid #fecaca;
-      color:#dc2626;padding:.75rem 1.25rem;border-radius:.5rem;font-size:.85rem;
-      max-width:380px;z-index:9500;display:none;box-shadow:0 4px 16px rgba(0,0,0,.1);}
+    .tbl-wrap { overflow-x:auto; max-height:500px; overflow-y:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.78rem; }
+    thead { position:sticky; top:0; z-index:2; }
+    thead tr { background:var(--bg); }
+    th {
+      padding:.6rem .875rem; text-align:left; font-weight:600; color:var(--text-sec);
+      font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; white-space:nowrap;
+      border-bottom:2px solid var(--border); user-select:none;
+    }
+    td {
+      padding:.6rem .875rem; border-bottom:1px solid var(--border-light);
+      vertical-align:middle; color:var(--text);
+    }
+    tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:#f8fafc; }
+    .empty-row td { text-align:center; color:var(--text-muted); padding:3rem; font-size:.85rem; }
+
+    /* ── Badges ──────────────────────────────────────── */
+    .badge {
+      display:inline-flex; align-items:center; padding:.18rem .55rem; border-radius:999px;
+      font-size:.68rem; font-weight:600; white-space:nowrap; line-height:1.4;
+    }
+    .b-neg    { background:var(--c-neg-pale);    color:var(--c-neg); }
+    .b-low    { background:var(--c-low-pale);    color:var(--c-low); }
+    .b-high   { background:var(--c-high-pale);   color:var(--c-high); }
+    .b-crit   { background:var(--c-crit-pale);   color:var(--c-crit); }
+    .b-unk    { background:#f3f4f6;              color:#6b7280; }
+    .b-open   { background:var(--c-open-pale);   color:var(--c-open); }
+    .b-prog   { background:var(--c-prog-pale);   color:var(--c-prog); }
+    .b-closed { background:var(--c-closed-pale); color:var(--c-closed); }
+
+    .apt-tag {
+      background:var(--primary); color:#fff; padding:.12rem .45rem; border-radius:.3rem;
+      font-size:.68rem; font-weight:700; font-family:'JetBrains Mono',monospace; letter-spacing:.02em;
+    }
+    .reg-tag {
+      background:var(--sb-bg); color:#c7d2fe; padding:.12rem .45rem; border-radius:.3rem;
+      font-size:.68rem; font-weight:600; font-family:'JetBrains Mono',monospace; letter-spacing:.04em;
+    }
+    .airport-code {
+      font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:600;
+      color:var(--text-sec); letter-spacing:.04em;
+    }
+
+    /* ── Debug panel ─────────────────────────────────── */
+    #dbgPanel {
+      position:fixed; bottom:1rem; right:1rem; background:#0f172a; color:#e2e8f0;
+      border-radius:var(--radius); padding:1rem 1.25rem; width:400px; max-height:440px;
+      overflow-y:auto; font-size:.72rem; z-index:8000; display:none;
+      box-shadow:var(--shadow-lg); font-family:'JetBrains Mono',monospace;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    #dbgPanel h4 { color:#818cf8; margin-bottom:.6rem; font-size:.8rem; font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:space-between; }
+    .dbg-line { padding:.18rem 0; border-bottom:1px solid #1e293b; word-break:break-all; }
+    .dbg-line:last-child { border:none; }
+    .dbg-err  { color:#f87171; }
+    .dbg-ok   { color:#34d399; }
+    .dbg-info { color:#93c5fd; }
+
+    /* ── Error toast ─────────────────────────────────── */
+    #errToast {
+      position:fixed; top:1rem; right:1rem; background:var(--danger-pale);
+      border:1px solid #fecaca; color:var(--c-crit); padding:.75rem 1.25rem;
+      border-radius:var(--radius-sm); font-size:.82rem; max-width:380px;
+      z-index:9500; display:none; box-shadow:var(--shadow-lg);
+    }
+
+    /* ── Divider ─────────────────────────────────────── */
+    .section-divider { height:1px; background:var(--border); margin:1.25rem 0; }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width:768px) {
+      :root { --sidebar-w:0px; }
+      .sidebar { display:none; }
+      .content { padding:1rem; }
+      .kpi-grid { grid-template-columns:repeat(2,1fr); }
+    }
   </style>
 </head>
 <body>
 
 <!-- Splash -->
 <div id="splash">
-  <img src="/logo.png" alt="GL3" onerror="this.style.display='none'"/>
-  <p id="splashMsg">Connecting to Smartsheet…</p>
-  <div class="spinner"></div>
+  <div class="splash-glass">
+    <img src="/logo.png" alt="Groundlink III" class="splash-logo" onerror="this.style.display='none'"/>
+    <div class="splash-title">
+      Groundlink III
+      <span>Safety Dashboard</span>
+    </div>
+    <p id="splashMsg">Connecting to Smartsheet…</p>
+    <div class="splash-dots">
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Token setup -->
 <div id="setupOverlay">
   <div class="setup-modal">
-    <h2><i class="fas fa-key" style="color:var(--primary)"></i> Connect to Smartsheet</h2>
+    <div class="setup-modal-icon"><i class="fas fa-key"></i></div>
+    <h2>Connect to Smartsheet</h2>
     <p>Enter your Smartsheet API token to load incident data for all Portuguese airports.</p>
-    <input type="password" id="tokenInput" placeholder="Smartsheet API token"/>
+    <label for="tokenInput">API Token</label>
+    <input type="password" id="tokenInput" placeholder="Paste your Smartsheet API token…" autocomplete="off"/>
     <button onclick="saveToken()"><i class="fas fa-plug"></i> Connect to Dashboard</button>
     <div class="setup-error" id="setupError"></div>
   </div>
@@ -213,23 +464,56 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sb-head">
-      <img src="/logo.png" alt="GL3" onerror="this.style.display='none'"/>
-      <span>Groundlink III<br>Safety Dashboard</span>
+      <div class="sb-logo-wrap">
+        <img src="/logo.png" alt="GL3" onerror="this.style.display='none'"/>
+      </div>
+      <div class="sb-head-text">
+        <strong>Groundlink III</strong>
+        <small>Safety Dashboard</small>
+      </div>
     </div>
+
     <nav class="sb-nav">
-      <div class="sb-section">Navigation</div>
-      <button class="nav-item active" data-page="network"><i class="fas fa-globe"></i> Portugal Network</button>
-      <button class="nav-item" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</button>
-      <button class="nav-item" data-page="trends"><i class="fas fa-chart-area"></i> Trends</button>
-      <button class="nav-item" data-page="categories"><i class="fas fa-layer-group"></i> Categories</button>
-      <button class="nav-item" data-page="records"><i class="fas fa-table"></i> All Records</button>
-      <div class="sb-section" style="margin-top:.75rem;">Airports</div>
+      <div class="sb-section">Overview</div>
+      <button class="nav-item active" data-page="network">
+        <i class="fas fa-globe-europe"></i> Portugal Network
+      </button>
+      <button class="nav-item" data-page="dashboard">
+        <i class="fas fa-chart-line"></i> Dashboard
+      </button>
+
+      <div class="sb-section">Analysis</div>
+      <button class="nav-item" data-page="trends">
+        <i class="fas fa-chart-area"></i> Trends
+      </button>
+      <button class="nav-item" data-page="categories">
+        <i class="fas fa-layer-group"></i> Categories
+      </button>
+      <button class="nav-item" data-page="records">
+        <i class="fas fa-table"></i> All Records
+      </button>
+
+      <div class="sb-section" style="margin-top:.5rem;">Airports</div>
       <div id="airportList"></div>
-      <div class="sb-section" style="margin-top:.75rem;">System</div>
-      <button class="nav-item" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
-      <button class="nav-item" onclick="toggleDebug()"><i class="fas fa-bug"></i> Debug Panel</button>
-      <button class="nav-item" onclick="clearToken()"><i class="fas fa-sign-out-alt"></i> Change Token</button>
+
+      <div class="sb-section" style="margin-top:.5rem;">System</div>
+      <button class="nav-item" onclick="refreshData()">
+        <i class="fas fa-sync-alt"></i> Refresh Data
+      </button>
+      <button class="nav-item" onclick="runDiagnostic()">
+        <i class="fas fa-stethoscope"></i> Diagnose
+      </button>
+      <button class="nav-item" onclick="toggleDebug()">
+        <i class="fas fa-bug"></i> Debug Panel
+      </button>
+      <button class="nav-item" onclick="clearToken()" style="color:#f87171;">
+        <i class="fas fa-sign-out-alt"></i> Change Token
+      </button>
     </nav>
+
+    <div class="sb-footer">
+      <div class="sb-version">GL3 Safety · v4</div>
+    </div>
   </aside>
 
   <!-- Main -->
@@ -240,8 +524,12 @@
         <p id="pageSubtitle">Aggregated safety metrics across all airports</p>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-secondary" onclick="runDiagnostic()"><i class="fas fa-stethoscope"></i> Diagnose</button>
-        <button class="btn btn-primary" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <button class="btn btn-secondary" onclick="refreshData()">
+          <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        <button class="btn btn-primary" onclick="runDiagnostic()">
+          <i class="fas fa-stethoscope"></i> Diagnose
+        </button>
       </div>
     </div>
 
@@ -250,13 +538,16 @@
       <!-- ═══ NETWORK ═══ -->
       <div class="page active" id="page-network">
         <div class="risk-legend">
-          <span>Risk Scale:</span>
+          <span>Risk:</span>
           <div class="rl-item"><div class="rl-dot" style="background:var(--c-neg)"></div>Negligible (1–10)</div>
           <div class="rl-item"><div class="rl-dot" style="background:var(--c-low)"></div>Low (11–49)</div>
           <div class="rl-item"><div class="rl-dot" style="background:var(--c-high)"></div>High (50–99)</div>
           <div class="rl-item"><div class="rl-dot" style="background:var(--c-crit)"></div>Critical (100+)</div>
         </div>
-        <div class="load-bar" id="loadBar"><div class="spinner" style="width:16px;height:16px;border-width:2px"></div><span id="loadMsg">Loading airports…</span></div>
+        <div class="load-bar" id="loadBar">
+          <div class="mini-spin"></div>
+          <span id="loadMsg">Loading airports…</span>
+        </div>
         <div class="filter-bar">
           <select id="netYear"  onchange="applyFilters('network')"><option value="">All Years</option></select>
           <select id="netMonth" onchange="applyFilters('network')"><option value="">All Months</option></select>
@@ -265,21 +556,71 @@
           <select id="netApt"   onchange="applyFilters('network')"><option value="">All Airports</option></select>
         </div>
         <div class="kpi-grid">
-          <div class="kpi-card"><div class="kpi-label">Total Incidents</div><div class="kpi-value" id="net-total">—</div><div class="kpi-sub">All airports</div></div>
-          <div class="kpi-card kpi-open"><div class="kpi-label">Open</div><div class="kpi-value" id="net-open">—</div><div class="kpi-sub">Requires action</div></div>
-          <div class="kpi-card kpi-high"><div class="kpi-label">High Risk</div><div class="kpi-value" id="net-high">—</div><div class="kpi-sub">Score 50–99</div></div>
-          <div class="kpi-card kpi-crit"><div class="kpi-label">Critical</div><div class="kpi-value" id="net-crit">—</div><div class="kpi-sub">Score 100+</div></div>
-          <div class="kpi-card"><div class="kpi-label">Active Airports</div><div class="kpi-value" id="net-apts">—</div><div class="kpi-sub">With incidents</div></div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-list-ul"></i></div>
+            <div class="kpi-label">Total Incidents</div>
+            <div class="kpi-value" id="net-total">—</div>
+            <div class="kpi-sub">All airports combined</div>
+          </div>
+          <div class="kpi-card kpi-open">
+            <div class="kpi-icon"><i class="fas fa-folder-open"></i></div>
+            <div class="kpi-label">Open</div>
+            <div class="kpi-value" id="net-open">—</div>
+            <div class="kpi-sub">Requires action</div>
+          </div>
+          <div class="kpi-card kpi-high">
+            <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="kpi-label">High Risk</div>
+            <div class="kpi-value" id="net-high">—</div>
+            <div class="kpi-sub">Score 50–99</div>
+          </div>
+          <div class="kpi-card kpi-crit">
+            <div class="kpi-icon"><i class="fas fa-radiation"></i></div>
+            <div class="kpi-label">Critical</div>
+            <div class="kpi-value" id="net-crit">—</div>
+            <div class="kpi-sub">Score 100+</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-plane"></i></div>
+            <div class="kpi-label">Active Airports</div>
+            <div class="kpi-value" id="net-apts">—</div>
+            <div class="kpi-sub">With incidents</div>
+          </div>
         </div>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Incidents by Airport</h3><div class="chart-wrap"><canvas id="ch-net-apt"></canvas></div></div>
-          <div class="chart-card"><h3>Risk Distribution</h3><div class="chart-wrap"><canvas id="ch-net-risk"></canvas></div></div>
-          <div class="chart-card"><h3>Status Overview</h3><div class="chart-wrap"><canvas id="ch-net-status"></canvas></div></div>
-          <div class="chart-card"><h3>Top Categories</h3><div class="chart-wrap"><canvas id="ch-net-cat"></canvas></div></div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Incidents by Airport</h3></div>
+            <div class="chart-wrap"><canvas id="ch-net-apt"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Risk Distribution</h3></div>
+            <div class="chart-wrap"><canvas id="ch-net-risk"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Status Overview</h3></div>
+            <div class="chart-wrap"><canvas id="ch-net-status"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Top Categories</h3></div>
+            <div class="chart-wrap"><canvas id="ch-net-cat"></canvas></div>
+          </div>
         </div>
         <div class="table-card">
-          <div class="table-head"><h3>All Incidents</h3><span class="tbl-count" id="net-tbl-count"></span></div>
-          <div class="tbl-wrap"><table><thead><tr><th>Inc #</th><th>Airport</th><th>Date</th><th>Category</th><th>Sub-Category</th><th>Risk</th><th>Status</th><th>Summary</th></tr></thead><tbody id="net-tbody"></tbody></table></div>
+          <div class="table-head">
+            <h3>All Incidents</h3>
+            <span class="tbl-count" id="net-tbl-count"></span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Inc #</th><th>Airport</th><th>Date</th>
+                <th>A/C Reg</th><th>Dep</th><th>Arr</th>
+                <th>Category</th><th>Sub-Category</th>
+                <th>Risk</th><th>Status</th><th>Synopsis</th>
+              </tr></thead>
+              <tbody id="net-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -293,22 +634,77 @@
           <select id="dashRisk"  onchange="applyFilters('dashboard')"><option value="">All Risk Levels</option></select>
         </div>
         <div class="kpi-grid">
-          <div class="kpi-card"><div class="kpi-label">Total</div><div class="kpi-value" id="dash-total">—</div></div>
-          <div class="kpi-card kpi-open"><div class="kpi-label">Open</div><div class="kpi-value" id="dash-open">—</div></div>
-          <div class="kpi-card"><div class="kpi-label">In Progress</div><div class="kpi-value" id="dash-prog">—</div></div>
-          <div class="kpi-card"><div class="kpi-label">Closed</div><div class="kpi-value" id="dash-closed">—</div></div>
-          <div class="kpi-card kpi-high"><div class="kpi-label">High Risk</div><div class="kpi-value" id="dash-high">—</div></div>
-          <div class="kpi-card kpi-crit"><div class="kpi-label">Critical</div><div class="kpi-value" id="dash-crit">—</div></div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-list-ul"></i></div>
+            <div class="kpi-label">Total</div>
+            <div class="kpi-value" id="dash-total">—</div>
+            <div class="kpi-sub">All incidents</div>
+          </div>
+          <div class="kpi-card kpi-open">
+            <div class="kpi-icon"><i class="fas fa-folder-open"></i></div>
+            <div class="kpi-label">Open</div>
+            <div class="kpi-value" id="dash-open">—</div>
+            <div class="kpi-sub">Pending action</div>
+          </div>
+          <div class="kpi-card kpi-warn">
+            <div class="kpi-icon"><i class="fas fa-spinner"></i></div>
+            <div class="kpi-label">In Progress</div>
+            <div class="kpi-value" id="dash-prog">—</div>
+            <div class="kpi-sub">Being handled</div>
+          </div>
+          <div class="kpi-card kpi-success">
+            <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="kpi-label">Closed</div>
+            <div class="kpi-value" id="dash-closed">—</div>
+            <div class="kpi-sub">Resolved</div>
+          </div>
+          <div class="kpi-card kpi-high">
+            <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="kpi-label">High Risk</div>
+            <div class="kpi-value" id="dash-high">—</div>
+            <div class="kpi-sub">Score 50–99</div>
+          </div>
+          <div class="kpi-card kpi-crit">
+            <div class="kpi-icon"><i class="fas fa-radiation"></i></div>
+            <div class="kpi-label">Critical</div>
+            <div class="kpi-value" id="dash-crit">—</div>
+            <div class="kpi-sub">Score 100+</div>
+          </div>
         </div>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Monthly Trend</h3><div class="chart-wrap"><canvas id="ch-dash-monthly"></canvas></div></div>
-          <div class="chart-card"><h3>By Category</h3><div class="chart-wrap"><canvas id="ch-dash-cat"></canvas></div></div>
-          <div class="chart-card"><h3>Risk Levels</h3><div class="chart-wrap"><canvas id="ch-dash-risk"></canvas></div></div>
-          <div class="chart-card"><h3>Status</h3><div class="chart-wrap"><canvas id="ch-dash-status"></canvas></div></div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Monthly Trend</h3></div>
+            <div class="chart-wrap"><canvas id="ch-dash-monthly"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>By Category</h3></div>
+            <div class="chart-wrap"><canvas id="ch-dash-cat"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Risk Levels</h3></div>
+            <div class="chart-wrap"><canvas id="ch-dash-risk"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Status</h3></div>
+            <div class="chart-wrap"><canvas id="ch-dash-status"></canvas></div>
+          </div>
         </div>
         <div class="table-card">
-          <div class="table-head"><h3>Incidents</h3><span class="tbl-count" id="dash-tbl-count"></span></div>
-          <div class="tbl-wrap"><table><thead><tr><th>Inc #</th><th>Airport</th><th>Date</th><th>Category</th><th>Sub-Category</th><th>Risk</th><th>Status</th><th>Summary</th></tr></thead><tbody id="dash-tbody"></tbody></table></div>
+          <div class="table-head">
+            <h3>Incidents</h3>
+            <span class="tbl-count" id="dash-tbl-count"></span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Inc #</th><th>Airport</th><th>Date</th>
+                <th>A/C Reg</th><th>Dep</th><th>Arr</th>
+                <th>Category</th><th>Sub-Category</th>
+                <th>Risk</th><th>Status</th><th>Synopsis</th>
+              </tr></thead>
+              <tbody id="dash-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -320,10 +716,22 @@
           <select id="trendCat"  onchange="applyFilters('trends')"><option value="">All Categories</option></select>
         </div>
         <div class="chart-grid">
-          <div class="chart-card"><h3>Monthly Incident Trend</h3><div class="chart-wrap"><canvas id="ch-tr-monthly"></canvas></div></div>
-          <div class="chart-card"><h3>Risk Over Time</h3><div class="chart-wrap"><canvas id="ch-tr-risk"></canvas></div></div>
-          <div class="chart-card"><h3>Status Over Time</h3><div class="chart-wrap"><canvas id="ch-tr-status"></canvas></div></div>
-          <div class="chart-card"><h3>Top Category Trend</h3><div class="chart-wrap"><canvas id="ch-tr-cat"></canvas></div></div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Monthly Incident Trend</h3></div>
+            <div class="chart-wrap"><canvas id="ch-tr-monthly"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Risk Over Time</h3></div>
+            <div class="chart-wrap"><canvas id="ch-tr-risk"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Status Over Time</h3></div>
+            <div class="chart-wrap"><canvas id="ch-tr-status"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Top Category Trend</h3></div>
+            <div class="chart-wrap"><canvas id="ch-tr-cat"></canvas></div>
+          </div>
         </div>
       </div>
 
@@ -335,10 +743,22 @@
           <select id="catRisk" onchange="applyFilters('categories')"><option value="">All Risk Levels</option></select>
         </div>
         <div class="chart-grid">
-          <div class="chart-card"><h3>By Category</h3><div class="chart-wrap"><canvas id="ch-cat-main"></canvas></div></div>
-          <div class="chart-card"><h3>Sub-Categories</h3><div class="chart-wrap"><canvas id="ch-cat-sub"></canvas></div></div>
-          <div class="chart-card"><h3>Category × Risk</h3><div class="chart-wrap"><canvas id="ch-cat-risk"></canvas></div></div>
-          <div class="chart-card"><h3>Category × Status</h3><div class="chart-wrap"><canvas id="ch-cat-status"></canvas></div></div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>By Category</h3></div>
+            <div class="chart-wrap"><canvas id="ch-cat-main"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Sub-Categories</h3></div>
+            <div class="chart-wrap"><canvas id="ch-cat-sub"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Category × Risk</h3></div>
+            <div class="chart-wrap"><canvas id="ch-cat-risk"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>Category × Status</h3></div>
+            <div class="chart-wrap"><canvas id="ch-cat-status"></canvas></div>
+          </div>
         </div>
       </div>
 
@@ -351,11 +771,24 @@
           <select id="recSubCat" onchange="applyFilters('records')"><option value="">All Sub-Categories</option></select>
           <select id="recRisk"   onchange="applyFilters('records')"><option value="">All Risk Levels</option></select>
           <select id="recStatus" onchange="applyFilters('records')"><option value="">All Statuses</option></select>
-          <input  type="text" id="recSearch" placeholder="Search…" oninput="applyFilters('records')"/>
+          <input  type="text" id="recSearch" placeholder="Search by incident #, category, A/C reg, synopsis…" oninput="applyFilters('records')"/>
         </div>
         <div class="table-card">
-          <div class="table-head"><h3>All Records</h3><span class="tbl-count" id="rec-tbl-count"></span></div>
-          <div class="tbl-wrap"><table><thead><tr><th>Inc #</th><th>Airport</th><th>Date</th><th>Category</th><th>Sub-Category</th><th>Risk</th><th>Status</th><th>Summary</th></tr></thead><tbody id="rec-tbody"></tbody></table></div>
+          <div class="table-head">
+            <h3>All Records</h3>
+            <span class="tbl-count" id="rec-tbl-count"></span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Inc #</th><th>Airport</th><th>Date</th>
+                <th>A/C Reg</th><th>Dep</th><th>Arr</th>
+                <th>Category</th><th>Sub-Category</th>
+                <th>Risk</th><th>Status</th><th>Synopsis</th>
+              </tr></thead>
+              <tbody id="rec-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -365,7 +798,10 @@
 
 <!-- Debug panel -->
 <div id="dbgPanel">
-  <h4><i class="fas fa-bug"></i> Debug Log <button onclick="document.getElementById('debugList').innerHTML=''" style="float:right;background:none;border:none;color:#64748b;cursor:pointer;font-size:.7rem">Clear</button></h4>
+  <h4>
+    <span><i class="fas fa-bug"></i> Debug Log</span>
+    <button onclick="document.getElementById('debugList').innerHTML=''" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:.7rem;font-family:inherit;">Clear</button>
+  </h4>
   <div id="debugList"></div>
 </div>
 
@@ -386,14 +822,14 @@ const CFG = {
 };
 
 const STATE = {
-  token:    null,
-  allRows:  [],
-  charts:   {},
-  cache:    {},
-  page:     'network',
+  token:   null,
+  allRows: [],
+  charts:  {},
+  cache:   {},
+  page:    'network',
 };
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const PALETTE = ['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'];
 
 // ═══════════════════════════════════════════════════════════════
@@ -421,7 +857,7 @@ function setLoad(msg) {
   const bar = document.getElementById('loadBar');
   const lm  = document.getElementById('loadMsg');
   if (!bar) return;
-  if (msg) { bar.classList.add('show'); if(lm) lm.textContent = msg; }
+  if (msg) { bar.classList.add('show'); if (lm) lm.textContent = msg; }
   else      { bar.classList.remove('show'); }
 }
 
@@ -444,9 +880,9 @@ function normRisk(raw) {
   }
   const s = String(raw).toLowerCase();
   if (s.includes('critical') || s.includes('very high')) return 'critical';
-  if (s.includes('high'))   return 'high';
-  if (s.includes('medium') || s.includes('moderate'))   return 'low';
-  if (s.includes('low') || s.includes('negligible'))    return 'negligible';
+  if (s.includes('high'))                                 return 'high';
+  if (s.includes('medium') || s.includes('moderate'))    return 'low';
+  if (s.includes('low') || s.includes('negligible'))     return 'negligible';
   return 'unknown';
 }
 
@@ -494,14 +930,16 @@ function statusBadge(s) {
 }
 
 function unique(arr) { return [...new Set(arr.filter(v => v !== null && v !== undefined))].sort(); }
+
 function countBy(rows, key) {
   const m = {};
   rows.forEach(r => { const v = r[key] || 'Unknown'; m[v] = (m[v]||0)+1; });
   return m;
 }
+
 function last12() {
   const out = [], now = new Date();
-  for (let i=11; i>=0; i--) {
+  for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
     out.push({ label:`${MONTHS[d.getMonth()]} ${d.getFullYear()}`, y:d.getFullYear(), m:d.getMonth()+1 });
   }
@@ -513,26 +951,21 @@ function last12() {
 // ═══════════════════════════════════════════════════════════════
 async function callAPI(sheetId) {
   dbg(`→ callAPI sheetId=${sheetId}`);
-
   const res = await fetch(CFG.endpoint, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({ token: STATE.token, sheetId: String(sheetId) }),
   });
-
   dbg(`← HTTP ${res.status} for sheetId=${sheetId}`, undefined, res.ok ? 'ok' : 'err');
-
   let data;
   try { data = await res.json(); }
   catch(e) { throw new Error(`Non-JSON from proxy (HTTP ${res.status})`); }
-
   if (!res.ok) {
     const msg = data.error || data.message || `HTTP ${res.status}`;
     dbg(`API error: ${msg}`, data.errorCode, 'err');
     throw new Error(msg);
   }
-
-  dbg(`Sheet "${data.name}" — rows: ${(data.rows||[]).length}, cols: ${(data.columns||[]).length}`, undefined, 'ok');
+  dbg(`Sheet "${data.name}" — rows: ${(data.rows||[]).length}`, undefined, 'ok');
   return data;
 }
 
@@ -546,7 +979,7 @@ function parseRows(sheet, airport) {
   }
 
   const cols = sheet.columns;
-  dbg(`Columns [${airport.code}]`, cols.map(c=>c.title));
+  dbg(`Columns [${airport.code}]`, cols.map(c => c.title));
 
   function findCol(titles) {
     for (const t of titles) {
@@ -564,12 +997,15 @@ function parseRows(sheet, airport) {
   const cid = {
     incNo:   findCol(['Incident No','Incident Number','Inc No','Incident #','No.','Ref','Reference']),
     date:    findCol(['Date','Incident Date','Event Date','Occurrence Date','Report Date']),
+    acReg:   findCol(['Aircraft Registration','A/C Registration','A/C Reg','Registration','Tail Number','Aircraft Reg','AC Reg','Registration No','Aircraft No','A/C']),
+    depApt:  findCol(['Departure Airport','Dep Airport','Departure','Origin Airport','From Airport','Origin','Dep ICAO','Dep IATA','DEP']),
+    arrApt:  findCol(['Arrival Airport','Arr Airport','Arrival','Destination Airport','To Airport','Destination','Arr ICAO','Arr IATA','ARR']),
     cat:     findCol(['Category','Incident Category','Event Category','Type','Event Type']),
     subCat:  findCol(['Sub-Category','Sub Category','Subcategory','Sub-category','SubCategory','Sub Type']),
     risk:    findCol(['Risk Assessment','Risk Score','Risk','Risk Level','RPN','Risk Rating']),
     sev:     findCol(['Severity','Priority','Level','Severity Level']),
     status:  findCol(['Status','State','Condition','Current Status']),
-    summary: findCol(['Ground Event Summary','Summary','Description','Event Description','Details','Notes','Comments','Event Summary']),
+    synopsis:findCol(['Synopsis','Ground Event Summary','Summary','Description','Event Description','Details','Notes','Comments','Event Summary']),
   };
 
   function getVal(row, colId) {
@@ -587,11 +1023,11 @@ function parseRows(sheet, airport) {
   let seq = 0, skipped = 0;
 
   sheet.rows.forEach((row, i) => {
-    const dateStr = getVal(row, cid.date);
-    const cat     = getVal(row, cid.cat);
-    const summary = getVal(row, cid.summary);
+    const dateStr  = getVal(row, cid.date);
+    const cat      = getVal(row, cid.cat);
+    const synopsis = getVal(row, cid.synopsis);
 
-    if (!dateStr && !cat && !summary) { skipped++; return; }
+    if (!dateStr && !cat && !synopsis) { skipped++; return; }
 
     seq++;
     const rawRisk   = getVal(row, cid.risk) ?? getVal(row, cid.sev);
@@ -606,13 +1042,16 @@ function parseRows(sheet, airport) {
       date:    pd,
       dateStr: fmtDate(pd),
       year:    pd ? pd.getFullYear() : null,
-      month:   pd ? pd.getMonth()+1 : null,
-      cat:     cat     || 'Uncategorized',
+      month:   pd ? pd.getMonth()+1  : null,
+      acReg:   getVal(row, cid.acReg)  || '—',
+      depApt:  getVal(row, cid.depApt) || '—',
+      arrApt:  getVal(row, cid.arrApt) || '—',
+      cat:     cat      || 'Uncategorized',
       subCat:  getVal(row, cid.subCat) || 'N/A',
       risk:    normRisk(rawRisk),
       riskRaw: rawRisk,
       status:  normStatus(rawStatus),
-      summary: summary || 'No summary',
+      synopsis:synopsis || '—',
       airport: airport.code,
       aptName: airport.name,
     });
@@ -664,7 +1103,8 @@ async function loadAll() {
   populateFilters();
   buildAirportList();
   applyFilters(STATE.page);
-  document.getElementById('splash').style.display = 'none';
+  document.getElementById('splash').style.opacity = '0';
+  setTimeout(() => { document.getElementById('splash').style.display = 'none'; }, 500);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -677,12 +1117,10 @@ async function runDiagnostic() {
   dbg(`Token length: ${STATE.token ? STATE.token.length : 0}`);
   dbg(`Endpoint: ${CFG.endpoint}`);
 
-  // Test first airport
   const apt = CFG.airports[0];
   dbg(`Testing ${apt.name} (${apt.code}) sheetId=${apt.sheetId}`);
-
   try {
-    const res = await fetch(CFG.endpoint, {
+    const res  = await fetch(CFG.endpoint, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ token: STATE.token, sheetId: apt.sheetId }),
@@ -690,20 +1128,16 @@ async function runDiagnostic() {
     const text = await res.text();
     dbg(`Raw response status: ${res.status}`, undefined, res.ok ? 'ok' : 'err');
     dbg(`Raw response body (first 400 chars): ${text.substring(0,400)}`);
-
     if (res.ok) {
       const json = JSON.parse(text);
       dbg(`Sheet name: ${json.name}`, undefined, 'ok');
       dbg(`Columns: ${(json.columns||[]).map(c=>c.title).join(', ')}`);
       dbg(`Row count: ${(json.rows||[]).length}`, undefined, 'ok');
-      if (json.rows && json.rows[0]) {
-        dbg(`First row cells: ${JSON.stringify(json.rows[0].cells)}`);
-      }
+      if (json.rows && json.rows[0]) dbg(`First row cells: ${JSON.stringify(json.rows[0].cells)}`);
     }
   } catch(e) {
     dbg(`Diagnostic fetch threw: ${e.message}`, undefined, 'err');
   }
-
   dbg('=== DIAGNOSTIC END ===', undefined, 'info');
 }
 
@@ -713,7 +1147,7 @@ async function runDiagnostic() {
 function fillSelect(id, values, labels) {
   const el = document.getElementById(id);
   if (!el) return;
-  const cur = el.value;
+  const cur   = el.value;
   const first = el.options[0].cloneNode(true);
   el.innerHTML = '';
   el.appendChild(first);
@@ -728,60 +1162,67 @@ function fillSelect(id, values, labels) {
 
 function populateFilters() {
   const rows    = STATE.allRows;
-  const years   = unique(rows.map(r=>r.year)).reverse();
+  const years   = unique(rows.map(r => r.year)).reverse();
   const months  = [1,2,3,4,5,6,7,8,9,10,11,12];
-  const mLbls   = months.map(m=>MONTHS[m-1]);
-  const cats    = unique(rows.map(r=>r.cat));
-  const subCats = unique(rows.map(r=>r.subCat));
-  const apts    = CFG.airports.map(a=>a.code);
-  const aptLbls = CFG.airports.map(a=>`${a.code} – ${a.name}`);
+  const mLbls   = months.map(m => MONTHS[m-1]);
+  const cats    = unique(rows.map(r => r.cat));
+  const subCats = unique(rows.map(r => r.subCat));
+  const apts    = CFG.airports.map(a => a.code);
+  const aptLbls = CFG.airports.map(a => `${a.code} – ${a.name}`);
   const risks   = ['negligible','low','high','critical'];
   const rLbls   = ['Negligible (1–10)','Low (11–49)','High (50–99)','Critical (100+)'];
   const stats   = ['open','inprogress','closed','unknown'];
   const stLbls  = ['Open','In Progress','Closed','Unknown'];
 
-  ['netYear','dashYear','trendYear','catYear','recYear'].forEach(id=>fillSelect(id,years));
-  ['netMonth','dashMonth'].forEach(id=>fillSelect(id,months,mLbls));
-  ['netCat','dashCat','trendCat','recCat'].forEach(id=>fillSelect(id,cats));
-  ['netRisk','dashRisk','catRisk','recRisk'].forEach(id=>fillSelect(id,risks,rLbls));
-  ['netApt','dashApt','trendApt','catApt','recApt'].forEach(id=>fillSelect(id,apts,aptLbls));
+  ['netYear','dashYear','trendYear','catYear','recYear'].forEach(id => fillSelect(id, years));
+  ['netMonth','dashMonth'].forEach(id => fillSelect(id, months, mLbls));
+  ['netCat','dashCat','trendCat','recCat'].forEach(id => fillSelect(id, cats));
+  ['netRisk','dashRisk','catRisk','recRisk'].forEach(id => fillSelect(id, risks, rLbls));
+  ['netApt','dashApt','trendApt','catApt','recApt'].forEach(id => fillSelect(id, apts, aptLbls));
   fillSelect('recSubCat', subCats);
   fillSelect('recStatus', stats, stLbls);
 }
 
-function fv(id) { const el=document.getElementById(id); return el?el.value:''; }
+function fv(id) { const el = document.getElementById(id); return el ? el.value : ''; }
 
 function getFiltered(page) {
   let r = [...STATE.allRows];
-  if (page==='network') {
-    if(fv('netYear'))  r=r.filter(x=>String(x.year)===fv('netYear'));
-    if(fv('netMonth')) r=r.filter(x=>String(x.month)===fv('netMonth'));
-    if(fv('netCat'))   r=r.filter(x=>x.cat===fv('netCat'));
-    if(fv('netRisk'))  r=r.filter(x=>x.risk===fv('netRisk'));
-    if(fv('netApt'))   r=r.filter(x=>x.airport===fv('netApt'));
-  } else if (page==='dashboard') {
-    if(fv('dashApt'))   r=r.filter(x=>x.airport===fv('dashApt'));
-    if(fv('dashYear'))  r=r.filter(x=>String(x.year)===fv('dashYear'));
-    if(fv('dashMonth')) r=r.filter(x=>String(x.month)===fv('dashMonth'));
-    if(fv('dashCat'))   r=r.filter(x=>x.cat===fv('dashCat'));
-    if(fv('dashRisk'))  r=r.filter(x=>x.risk===fv('dashRisk'));
-  } else if (page==='trends') {
-    if(fv('trendApt'))  r=r.filter(x=>x.airport===fv('trendApt'));
-    if(fv('trendYear')) r=r.filter(x=>String(x.year)===fv('trendYear'));
-    if(fv('trendCat'))  r=r.filter(x=>x.cat===fv('trendCat'));
-  } else if (page==='categories') {
-    if(fv('catApt'))  r=r.filter(x=>x.airport===fv('catApt'));
-    if(fv('catYear')) r=r.filter(x=>String(x.year)===fv('catYear'));
-    if(fv('catRisk')) r=r.filter(x=>x.risk===fv('catRisk'));
-  } else if (page==='records') {
-    if(fv('recApt'))    r=r.filter(x=>x.airport===fv('recApt'));
-    if(fv('recYear'))   r=r.filter(x=>String(x.year)===fv('recYear'));
-    if(fv('recCat'))    r=r.filter(x=>x.cat===fv('recCat'));
-    if(fv('recSubCat')) r=r.filter(x=>x.subCat===fv('recSubCat'));
-    if(fv('recRisk'))   r=r.filter(x=>x.risk===fv('recRisk'));
-    if(fv('recStatus')) r=r.filter(x=>x.status===fv('recStatus'));
-    const q=fv('recSearch').toLowerCase();
-    if(q) r=r.filter(x=>x.summary.toLowerCase().includes(q)||x.cat.toLowerCase().includes(q)||x.incNo.toLowerCase().includes(q));
+  if (page === 'network') {
+    if (fv('netYear'))  r = r.filter(x => String(x.year) === fv('netYear'));
+    if (fv('netMonth')) r = r.filter(x => String(x.month) === fv('netMonth'));
+    if (fv('netCat'))   r = r.filter(x => x.cat === fv('netCat'));
+    if (fv('netRisk'))  r = r.filter(x => x.risk === fv('netRisk'));
+    if (fv('netApt'))   r = r.filter(x => x.airport === fv('netApt'));
+  } else if (page === 'dashboard') {
+    if (fv('dashApt'))   r = r.filter(x => x.airport === fv('dashApt'));
+    if (fv('dashYear'))  r = r.filter(x => String(x.year) === fv('dashYear'));
+    if (fv('dashMonth')) r = r.filter(x => String(x.month) === fv('dashMonth'));
+    if (fv('dashCat'))   r = r.filter(x => x.cat === fv('dashCat'));
+    if (fv('dashRisk'))  r = r.filter(x => x.risk === fv('dashRisk'));
+  } else if (page === 'trends') {
+    if (fv('trendApt'))  r = r.filter(x => x.airport === fv('trendApt'));
+    if (fv('trendYear')) r = r.filter(x => String(x.year) === fv('trendYear'));
+    if (fv('trendCat'))  r = r.filter(x => x.cat === fv('trendCat'));
+  } else if (page === 'categories') {
+    if (fv('catApt'))  r = r.filter(x => x.airport === fv('catApt'));
+    if (fv('catYear')) r = r.filter(x => String(x.year) === fv('catYear'));
+    if (fv('catRisk')) r = r.filter(x => x.risk === fv('catRisk'));
+  } else if (page === 'records') {
+    if (fv('recApt'))    r = r.filter(x => x.airport === fv('recApt'));
+    if (fv('recYear'))   r = r.filter(x => String(x.year) === fv('recYear'));
+    if (fv('recCat'))    r = r.filter(x => x.cat === fv('recCat'));
+    if (fv('recSubCat')) r = r.filter(x => x.subCat === fv('recSubCat'));
+    if (fv('recRisk'))   r = r.filter(x => x.risk === fv('recRisk'));
+    if (fv('recStatus')) r = r.filter(x => x.status === fv('recStatus'));
+    const q = fv('recSearch').toLowerCase();
+    if (q) r = r.filter(x =>
+      x.synopsis.toLowerCase().includes(q) ||
+      x.cat.toLowerCase().includes(q) ||
+      x.incNo.toLowerCase().includes(q) ||
+      x.acReg.toLowerCase().includes(q) ||
+      x.depApt.toLowerCase().includes(q) ||
+      x.arrApt.toLowerCase().includes(q)
+    );
   }
   return r;
 }
@@ -790,7 +1231,7 @@ function getFiltered(page) {
 // 9. CHART HELPER
 // ═══════════════════════════════════════════════════════════════
 function mkChart(id, cfg) {
-  if (STATE.charts[id]) { STATE.charts[id].destroy(); STATE.charts[id]=null; }
+  if (STATE.charts[id]) { STATE.charts[id].destroy(); STATE.charts[id] = null; }
   const c = document.getElementById(id);
   if (!c) return;
   STATE.charts[id] = new Chart(c.getContext('2d'), cfg);
@@ -801,6 +1242,23 @@ const STAT_COLORS = { open:'#2563eb', inprogress:'#d97706', closed:'#059669', un
 const RISK_ORDER  = ['critical','high','low','negligible','unknown'];
 const STAT_ORDER  = ['open','inprogress','closed','unknown'];
 
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { font:{ size:11 }, boxWidth:12, padding:12 } },
+    tooltip: { titleFont:{ size:11 }, bodyFont:{ size:11 } },
+  },
+  scales: {
+    x: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:10 } } },
+    y: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:10 } } },
+  },
+};
+
+function barOpts(extra={}) {
+  return { ...CHART_DEFAULTS, ...extra, plugins:{ ...CHART_DEFAULTS.plugins, ...(extra.plugins||{}) } };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 10. TABLE RENDERER
 // ═══════════════════════════════════════════════════════════════
@@ -808,21 +1266,24 @@ function renderTbl(tbodyId, countId, rows) {
   const tb = document.getElementById(tbodyId);
   const ct = document.getElementById(countId);
   if (!tb) return;
-  if (ct) ct.textContent = `${rows.length} incident${rows.length!==1?'s':''}`;
+  if (ct) ct.textContent = `${rows.length} incident${rows.length !== 1 ? 's' : ''}`;
   if (!rows.length) {
-    tb.innerHTML='<tr class="empty-row"><td colspan="8">No incidents match the selected filters.</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="11">No incidents match the selected filters.</td></tr>';
     return;
   }
-  tb.innerHTML = rows.map(r=>`
+  tb.innerHTML = rows.map(r => `
     <tr>
-      <td><strong>${r.incNo}</strong></td>
+      <td><strong style="font-family:'JetBrains Mono',monospace;font-size:.72rem">${r.incNo}</strong></td>
       <td><span class="apt-tag">${r.airport}</span></td>
-      <td style="white-space:nowrap">${r.dateStr}</td>
+      <td style="white-space:nowrap;color:var(--text-sec)">${r.dateStr}</td>
+      <td><span class="reg-tag">${r.acReg}</span></td>
+      <td><span class="airport-code">${r.depApt}</span></td>
+      <td><span class="airport-code">${r.arrApt}</span></td>
       <td>${r.cat}</td>
-      <td>${r.subCat}</td>
-      <td>${riskBadge(r.risk,r.riskRaw)}</td>
+      <td style="color:var(--text-sec)">${r.subCat}</td>
+      <td>${riskBadge(r.risk, r.riskRaw)}</td>
       <td>${statusBadge(r.status)}</td>
-      <td style="max-width:280px">${r.summary}</td>
+      <td style="max-width:260px;color:var(--text-sec)">${r.synopsis}</td>
     </tr>`).join('');
 }
 
@@ -831,72 +1292,72 @@ function renderTbl(tbodyId, countId, rows) {
 // ═══════════════════════════════════════════════════════════════
 function renderNetwork(rows) {
   setText('net-total', rows.length);
-  setText('net-open',  rows.filter(r=>r.status==='open').length);
-  setText('net-high',  rows.filter(r=>r.risk==='high').length);
-  setText('net-crit',  rows.filter(r=>r.risk==='critical').length);
-  setText('net-apts',  unique(rows.map(r=>r.airport)).length);
+  setText('net-open',  rows.filter(r => r.status === 'open').length);
+  setText('net-high',  rows.filter(r => r.risk === 'high').length);
+  setText('net-crit',  rows.filter(r => r.risk === 'critical').length);
+  setText('net-apts',  unique(rows.map(r => r.airport)).length);
 
-  const byApt=countBy(rows,'airport');
-  mkChart('ch-net-apt',{type:'bar',data:{labels:Object.keys(byApt),datasets:[{label:'Incidents',data:Object.values(byApt),backgroundColor:PALETTE}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  const byApt = countBy(rows, 'airport');
+  mkChart('ch-net-apt', {type:'bar', data:{labels:Object.keys(byApt), datasets:[{label:'Incidents', data:Object.values(byApt), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({plugins:{legend:{display:false}}})});
 
-  const rd=countBy(rows,'risk');
-  mkChart('ch-net-risk',{type:'doughnut',data:{labels:RISK_ORDER.map(r=>r[0].toUpperCase()+r.slice(1)),datasets:[{data:RISK_ORDER.map(r=>rd[r]||0),backgroundColor:RISK_ORDER.map(r=>RISK_COLORS[r])}]},options:{responsive:true,maintainAspectRatio:false}});
+  const rd = countBy(rows, 'risk');
+  mkChart('ch-net-risk', {type:'doughnut', data:{labels:RISK_ORDER.map(r => r[0].toUpperCase()+r.slice(1)), datasets:[{data:RISK_ORDER.map(r => rd[r]||0), backgroundColor:RISK_ORDER.map(r => RISK_COLORS[r]), borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:11}, boxWidth:12, padding:10}}}}});
 
-  const sd=countBy(rows,'status');
-  mkChart('ch-net-status',{type:'doughnut',data:{labels:['Open','In Progress','Closed','Unknown'],datasets:[{data:STAT_ORDER.map(s=>sd[s]||0),backgroundColor:STAT_ORDER.map(s=>STAT_COLORS[s])}]},options:{responsive:true,maintainAspectRatio:false}});
+  const sd = countBy(rows, 'status');
+  mkChart('ch-net-status', {type:'doughnut', data:{labels:['Open','In Progress','Closed','Unknown'], datasets:[{data:STAT_ORDER.map(s => sd[s]||0), backgroundColor:STAT_ORDER.map(s => STAT_COLORS[s]), borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:11}, boxWidth:12, padding:10}}}}});
 
-  const cd=Object.entries(countBy(rows,'cat')).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  mkChart('ch-net-cat',{type:'bar',data:{labels:cd.map(c=>c[0]),datasets:[{label:'Incidents',data:cd.map(c=>c[1]),backgroundColor:PALETTE}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}});
+  const cd = Object.entries(countBy(rows, 'cat')).sort((a,b) => b[1]-a[1]).slice(0,8);
+  mkChart('ch-net-cat', {type:'bar', data:{labels:cd.map(c => c[0]), datasets:[{label:'Incidents', data:cd.map(c => c[1]), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({indexAxis:'y', plugins:{legend:{display:false}}})});
 
-  renderTbl('net-tbody','net-tbl-count',rows);
+  renderTbl('net-tbody', 'net-tbl-count', rows);
 }
 
 function renderDashboard(rows) {
   setText('dash-total',  rows.length);
-  setText('dash-open',   rows.filter(r=>r.status==='open').length);
-  setText('dash-prog',   rows.filter(r=>r.status==='inprogress').length);
-  setText('dash-closed', rows.filter(r=>r.status==='closed').length);
-  setText('dash-high',   rows.filter(r=>r.risk==='high').length);
-  setText('dash-crit',   rows.filter(r=>r.risk==='critical').length);
+  setText('dash-open',   rows.filter(r => r.status === 'open').length);
+  setText('dash-prog',   rows.filter(r => r.status === 'inprogress').length);
+  setText('dash-closed', rows.filter(r => r.status === 'closed').length);
+  setText('dash-high',   rows.filter(r => r.risk === 'high').length);
+  setText('dash-crit',   rows.filter(r => r.risk === 'critical').length);
 
-  const m12=last12();
-  mkChart('ch-dash-monthly',{type:'line',data:{labels:m12.map(m=>m.label),datasets:[{label:'Incidents',data:m12.map(m=>rows.filter(r=>r.year===m.y&&r.month===m.m).length),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.1)',fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  const m12 = last12();
+  mkChart('ch-dash-monthly', {type:'line', data:{labels:m12.map(m => m.label), datasets:[{label:'Incidents', data:m12.map(m => rows.filter(r => r.year===m.y&&r.month===m.m).length), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.08)', fill:true, tension:.4, pointBackgroundColor:'#6366f1', pointRadius:3}]}, options:barOpts({plugins:{legend:{display:false}}})});
 
-  const cd=countBy(rows,'cat');
-  mkChart('ch-dash-cat',{type:'bar',data:{labels:Object.keys(cd),datasets:[{label:'Incidents',data:Object.values(cd),backgroundColor:PALETTE}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  const cd = countBy(rows, 'cat');
+  mkChart('ch-dash-cat', {type:'bar', data:{labels:Object.keys(cd), datasets:[{label:'Incidents', data:Object.values(cd), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({plugins:{legend:{display:false}}})});
 
-  const rd=countBy(rows,'risk');
-  mkChart('ch-dash-risk',{type:'doughnut',data:{labels:RISK_ORDER.map(r=>r[0].toUpperCase()+r.slice(1)),datasets:[{data:RISK_ORDER.map(r=>rd[r]||0),backgroundColor:RISK_ORDER.map(r=>RISK_COLORS[r])}]},options:{responsive:true,maintainAspectRatio:false}});
+  const rd = countBy(rows, 'risk');
+  mkChart('ch-dash-risk', {type:'doughnut', data:{labels:RISK_ORDER.map(r => r[0].toUpperCase()+r.slice(1)), datasets:[{data:RISK_ORDER.map(r => rd[r]||0), backgroundColor:RISK_ORDER.map(r => RISK_COLORS[r]), borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:11}, boxWidth:12}}}}});
 
-  const sd=countBy(rows,'status');
-  mkChart('ch-dash-status',{type:'doughnut',data:{labels:['Open','In Progress','Closed','Unknown'],datasets:[{data:STAT_ORDER.map(s=>sd[s]||0),backgroundColor:STAT_ORDER.map(s=>STAT_COLORS[s])}]},options:{responsive:true,maintainAspectRatio:false}});
+  const sd = countBy(rows, 'status');
+  mkChart('ch-dash-status', {type:'doughnut', data:{labels:['Open','In Progress','Closed','Unknown'], datasets:[{data:STAT_ORDER.map(s => sd[s]||0), backgroundColor:STAT_ORDER.map(s => STAT_COLORS[s]), borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:11}, boxWidth:12}}}}});
 
-  renderTbl('dash-tbody','dash-tbl-count',rows);
+  renderTbl('dash-tbody', 'dash-tbl-count', rows);
 }
 
 function renderTrends(rows) {
-  const m12=last12();
-  mkChart('ch-tr-monthly',{type:'bar',data:{labels:m12.map(m=>m.label),datasets:[{label:'Incidents',data:m12.map(m=>rows.filter(r=>r.year===m.y&&r.month===m.m).length),backgroundColor:'rgba(99,102,241,.7)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  const m12 = last12();
+  mkChart('ch-tr-monthly', {type:'bar', data:{labels:m12.map(m => m.label), datasets:[{label:'Incidents', data:m12.map(m => rows.filter(r => r.year===m.y&&r.month===m.m).length), backgroundColor:'rgba(99,102,241,.75)', borderRadius:4}]}, options:barOpts({plugins:{legend:{display:false}}})});
 
-  mkChart('ch-tr-risk',{type:'line',data:{labels:m12.map(m=>m.label),datasets:RISK_ORDER.slice(0,4).map(r=>({label:r[0].toUpperCase()+r.slice(1),data:m12.map(m=>rows.filter(x=>x.year===m.y&&x.month===m.m&&x.risk===r).length),borderColor:RISK_COLORS[r],backgroundColor:RISK_COLORS[r]+'22',fill:false,tension:.3}))},options:{responsive:true,maintainAspectRatio:false}});
+  mkChart('ch-tr-risk', {type:'line', data:{labels:m12.map(m => m.label), datasets:RISK_ORDER.slice(0,4).map(r => ({label:r[0].toUpperCase()+r.slice(1), data:m12.map(m => rows.filter(x => x.year===m.y&&x.month===m.m&&x.risk===r).length), borderColor:RISK_COLORS[r], backgroundColor:RISK_COLORS[r]+'18', fill:false, tension:.3, pointRadius:2}))}, options:barOpts()});
 
-  mkChart('ch-tr-status',{type:'line',data:{labels:m12.map(m=>m.label),datasets:STAT_ORDER.slice(0,3).map(s=>({label:s==='inprogress'?'In Progress':s[0].toUpperCase()+s.slice(1),data:m12.map(m=>rows.filter(x=>x.year===m.y&&x.month===m.m&&x.status===s).length),borderColor:STAT_COLORS[s],backgroundColor:STAT_COLORS[s]+'22',fill:false,tension:.3}))},options:{responsive:true,maintainAspectRatio:false}});
+  mkChart('ch-tr-status', {type:'line', data:{labels:m12.map(m => m.label), datasets:STAT_ORDER.slice(0,3).map(s => ({label:s==='inprogress'?'In Progress':s[0].toUpperCase()+s.slice(1), data:m12.map(m => rows.filter(x => x.year===m.y&&x.month===m.m&&x.status===s).length), borderColor:STAT_COLORS[s], backgroundColor:STAT_COLORS[s]+'18', fill:false, tension:.3, pointRadius:2}))}, options:barOpts()});
 
-  const cats=unique(rows.map(r=>r.cat)).slice(0,5);
-  mkChart('ch-tr-cat',{type:'line',data:{labels:m12.map(m=>m.label),datasets:cats.map((c,i)=>({label:c,data:m12.map(m=>rows.filter(x=>x.year===m.y&&x.month===m.m&&x.cat===c).length),borderColor:PALETTE[i],backgroundColor:PALETTE[i]+'22',fill:false,tension:.3}))},options:{responsive:true,maintainAspectRatio:false}});
+  const cats = unique(rows.map(r => r.cat)).slice(0,5);
+  mkChart('ch-tr-cat', {type:'line', data:{labels:m12.map(m => m.label), datasets:cats.map((c,i) => ({label:c, data:m12.map(m => rows.filter(x => x.year===m.y&&x.month===m.m&&x.cat===c).length), borderColor:PALETTE[i], backgroundColor:PALETTE[i]+'18', fill:false, tension:.3, pointRadius:2}))}, options:barOpts()});
 }
 
 function renderCategories(rows) {
-  const cd=Object.entries(countBy(rows,'cat')).sort((a,b)=>b[1]-a[1]);
-  mkChart('ch-cat-main',{type:'bar',data:{labels:cd.map(c=>c[0]),datasets:[{label:'Incidents',data:cd.map(c=>c[1]),backgroundColor:PALETTE}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}}}});
+  const cd = Object.entries(countBy(rows, 'cat')).sort((a,b) => b[1]-a[1]);
+  mkChart('ch-cat-main', {type:'bar', data:{labels:cd.map(c => c[0]), datasets:[{label:'Incidents', data:cd.map(c => c[1]), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({indexAxis:'y', plugins:{legend:{display:false}}})});
 
-  const sd=Object.entries(countBy(rows,'subCat')).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  mkChart('ch-cat-sub',{type:'doughnut',data:{labels:sd.map(s=>s[0]),datasets:[{data:sd.map(s=>s[1]),backgroundColor:PALETTE}]},options:{responsive:true,maintainAspectRatio:false}});
+  const sd = Object.entries(countBy(rows, 'subCat')).sort((a,b) => b[1]-a[1]).slice(0,10);
+  mkChart('ch-cat-sub', {type:'doughnut', data:{labels:sd.map(s => s[0]), datasets:[{data:sd.map(s => s[1]), backgroundColor:PALETTE, borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:10}, boxWidth:10}}}}});
 
-  const topCats=cd.slice(0,7).map(c=>c[0]);
-  mkChart('ch-cat-risk',{type:'bar',data:{labels:topCats,datasets:RISK_ORDER.map(r=>({label:r[0].toUpperCase()+r.slice(1),data:topCats.map(c=>rows.filter(x=>x.cat===c&&x.risk===r).length),backgroundColor:RISK_COLORS[r]}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true}}}});
+  const topCats = cd.slice(0,7).map(c => c[0]);
+  mkChart('ch-cat-risk', {type:'bar', data:{labels:topCats, datasets:RISK_ORDER.map(r => ({label:r[0].toUpperCase()+r.slice(1), data:topCats.map(c => rows.filter(x => x.cat===c&&x.risk===r).length), backgroundColor:RISK_COLORS[r], borderRadius:2}))}, options:barOpts({plugins:{legend:{position:'bottom'}}, scales:{x:{stacked:true, grid:{display:false}}, y:{stacked:true}}})});
 
-  mkChart('ch-cat-status',{type:'bar',data:{labels:topCats,datasets:STAT_ORDER.map(s=>({label:s==='inprogress'?'In Progress':s[0].toUpperCase()+s.slice(1),data:topCats.map(c=>rows.filter(x=>x.cat===c&&x.status===s).length),backgroundColor:STAT_COLORS[s]}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true}}}});
+  mkChart('ch-cat-status', {type:'bar', data:{labels:topCats, datasets:STAT_ORDER.map(s => ({label:s==='inprogress'?'In Progress':s[0].toUpperCase()+s.slice(1), data:topCats.map(c => rows.filter(x => x.cat===c&&x.status===s).length), backgroundColor:STAT_COLORS[s], borderRadius:2}))}, options:barOpts({plugins:{legend:{position:'bottom'}}, scales:{x:{stacked:true, grid:{display:false}}, y:{stacked:true}}})});
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -906,11 +1367,11 @@ function applyFilters(page) {
   if (!STATE.allRows.length) { dbg('applyFilters: no rows yet', undefined, 'err'); return; }
   const rows = getFiltered(page);
   dbg(`applyFilters [${page}] → ${rows.length} rows`);
-  if (page==='network')    renderNetwork(rows);
-  if (page==='dashboard')  renderDashboard(rows);
-  if (page==='trends')     renderTrends(rows);
-  if (page==='categories') renderCategories(rows);
-  if (page==='records')    renderTbl('rec-tbody','rec-tbl-count',rows);
+  if (page === 'network')    renderNetwork(rows);
+  if (page === 'dashboard')  renderDashboard(rows);
+  if (page === 'trends')     renderTrends(rows);
+  if (page === 'categories') renderCategories(rows);
+  if (page === 'records')    renderTbl('rec-tbody', 'rec-tbl-count', rows);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -926,11 +1387,11 @@ const PAGE_META = {
 
 function switchPage(page) {
   STATE.page = page;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const el = document.getElementById(`page-${page}`);
   if (el) el.classList.add('active');
-  document.querySelectorAll('.nav-item[data-page]').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
-  const [title, sub] = PAGE_META[page] || [page,''];
+  document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  const [title, sub] = PAGE_META[page] || [page, ''];
   setText('pageTitle', title);
   setText('pageSubtitle', sub);
   applyFilters(page);
@@ -945,7 +1406,7 @@ function buildAirportList() {
     const btn = document.createElement('button');
     btn.className = 'apt-btn';
     btn.dataset.index = idx;
-    btn.innerHTML = `<span class="apt-code">${apt.code}</span>${apt.name}<span style="margin-left:auto;color:#818cf8;font-size:.75rem">${count}</span>`;
+    btn.innerHTML = `<span class="apt-code">${apt.code}</span><span>${apt.name}</span><span class="apt-count">${count}</span>`;
     btn.addEventListener('click', () => {
       const dashApt = document.getElementById('dashApt');
       if (dashApt) dashApt.value = apt.code;
@@ -962,27 +1423,31 @@ document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
 // ═══════════════════════════════════════════════════════════════
 // 14. GLOBAL ACTIONS
 // ═══════════════════════════════════════════════════════════════
-function refreshData() { STATE.cache={}; loadAll(); }
+function refreshData() { STATE.cache = {}; loadAll(); }
+
 function toggleDebug() {
   const p = document.getElementById('dbgPanel');
-  p.style.display = p.style.display==='block' ? 'none' : 'block';
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
 }
+
 function saveToken() {
-  const t = document.getElementById('tokenInput').value.trim();
+  const t     = document.getElementById('tokenInput').value.trim();
   const errEl = document.getElementById('setupError');
-  if (!t) { errEl.textContent='Please paste your API token.'; errEl.style.display='block'; return; }
+  if (!t) { errEl.textContent = 'Please paste your API token.'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
   STATE.token = t;
   localStorage.setItem('gl3_token', t);
   document.getElementById('setupOverlay').style.display = 'none';
   document.getElementById('splash').style.display = 'flex';
+  document.getElementById('splash').style.opacity  = '1';
   loadAll();
 }
+
 function clearToken() {
   localStorage.removeItem('gl3_token');
-  STATE.token = null;
+  STATE.token   = null;
   STATE.allRows = [];
-  STATE.cache = {};
+  STATE.cache   = {};
   document.getElementById('setupOverlay').style.display = 'flex';
 }
 

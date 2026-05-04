@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/rpbra/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/.claude/skills/ui-ux-pro-max/**)",
+      "Bash(python scripts/search.py \"aviation safety enterprise dashboard professional dark\" --design-system -p \"Groundlink III Safety Dashboard\" -f markdown)"
+    ]
+  }
+}

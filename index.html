@@ -352,6 +352,13 @@
       font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; white-space:nowrap;
       border-bottom:2px solid var(--border); user-select:none;
     }
+    th.th-sortable {
+      cursor:pointer; transition:color .15s, background .15s;
+    }
+    th.th-sortable:hover { color:var(--primary); background:rgba(99,102,241,.04); }
+    th.th-sortable.th-active { color:var(--primary); }
+    .sort-icon { margin-left:.3rem; font-size:.6rem; opacity:.35; transition:opacity .15s; }
+    th.th-active .sort-icon { opacity:1; }
     td {
       padding:.6rem .875rem; border-bottom:1px solid var(--border-light);
       vertical-align:middle; color:var(--text);
@@ -612,7 +619,8 @@
           <div class="tbl-wrap">
             <table>
               <thead><tr>
-                <th>Inc #</th><th>Airport</th><th>Date</th>
+                <th>Inc #</th><th>Airport</th>
+                <th id="th-date-net" class="th-sortable th-active" onclick="toggleDateSort('net')">Date <i class="sort-icon fas fa-arrow-down"></i></th>
                 <th>A/C Reg</th><th>Dep</th><th>Arr</th>
                 <th>Category</th><th>Sub-Category</th>
                 <th>Risk</th><th>Status</th><th>Synopsis</th>
@@ -696,7 +704,8 @@
           <div class="tbl-wrap">
             <table>
               <thead><tr>
-                <th>Inc #</th><th>Airport</th><th>Date</th>
+                <th>Inc #</th><th>Airport</th>
+                <th id="th-date-dash" class="th-sortable th-active" onclick="toggleDateSort('dash')">Date <i class="sort-icon fas fa-arrow-down"></i></th>
                 <th>A/C Reg</th><th>Dep</th><th>Arr</th>
                 <th>Category</th><th>Sub-Category</th>
                 <th>Risk</th><th>Status</th><th>Synopsis</th>
@@ -780,7 +789,8 @@
           <div class="tbl-wrap">
             <table>
               <thead><tr>
-                <th>Inc #</th><th>Airport</th><th>Date</th>
+                <th>Inc #</th><th>Airport</th>
+                <th id="th-date-rec" class="th-sortable th-active" onclick="toggleDateSort('rec')">Date <i class="sort-icon fas fa-arrow-down"></i></th>
                 <th>A/C Reg</th><th>Dep</th><th>Arr</th>
                 <th>Category</th><th>Sub-Category</th>
                 <th>Risk</th><th>Status</th><th>Synopsis</th>
@@ -821,11 +831,12 @@ const CFG = {
 };
 
 const STATE = {
-  token:   null,
-  allRows: [],
-  charts:  {},
-  cache:   {},
-  page:    'network',
+  token:    null,
+  allRows:  [],
+  charts:   {},
+  cache:    {},
+  page:     'network',
+  sortDate: { net:'desc', dash:'desc', rec:'desc' },
 };
 
 const MONTHS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1259,18 +1270,53 @@ function barOpts(extra={}) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 10. TABLE RENDERER
+// 10. DATE SORT
 // ═══════════════════════════════════════════════════════════════
-function renderTbl(tbodyId, countId, rows) {
+const PAGE_FOR_TABLE = { net:'network', dash:'dashboard', rec:'records' };
+
+function toggleDateSort(key) {
+  STATE.sortDate[key] = STATE.sortDate[key] === 'desc' ? 'asc' : 'desc';
+  applyFilters(PAGE_FOR_TABLE[key]);
+}
+
+function applySortToHeader(key) {
+  const th = document.getElementById(`th-date-${key}`);
+  if (!th) return;
+  const dir  = STATE.sortDate[key];
+  const icon = th.querySelector('.sort-icon');
+  th.classList.toggle('th-active', !!dir);
+  if (icon) {
+    icon.className = dir === 'asc'
+      ? 'sort-icon fas fa-arrow-up'
+      : 'sort-icon fas fa-arrow-down';
+  }
+}
+
+function sortedByDate(rows, key) {
+  const dir = STATE.sortDate[key];
+  if (!dir) return rows;
+  return [...rows].sort((a, b) => {
+    const ta = a.date ? a.date.getTime() : 0;
+    const tb = b.date ? b.date.getTime() : 0;
+    return dir === 'asc' ? ta - tb : tb - ta;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 11. TABLE RENDERER
+// ═══════════════════════════════════════════════════════════════
+function renderTbl(tbodyId, countId, rows, tableKey) {
   const tb = document.getElementById(tbodyId);
   const ct = document.getElementById(countId);
   if (!tb) return;
-  if (ct) ct.textContent = `${rows.length} incident${rows.length !== 1 ? 's' : ''}`;
-  if (!rows.length) {
+  const sorted = tableKey ? sortedByDate(rows, tableKey) : rows;
+  if (tableKey) applySortToHeader(tableKey);
+  if (ct) ct.textContent = `${sorted.length} incident${sorted.length !== 1 ? 's' : ''}`;
+  if (!sorted.length) {
     tb.innerHTML = '<tr class="empty-row"><td colspan="11">No incidents match the selected filters.</td></tr>';
     return;
   }
-  tb.innerHTML = rows.map(r => `
+  tb.innerHTML = sorted.map(r => `
     <tr>
       <td><strong style="font-family:'JetBrains Mono',monospace;font-size:.72rem">${r.incNo}</strong></td>
       <td><span class="apt-tag">${r.airport}</span></td>
@@ -1308,7 +1354,7 @@ function renderNetwork(rows) {
   const cd = Object.entries(countBy(rows, 'cat')).sort((a,b) => b[1]-a[1]).slice(0,8);
   mkChart('ch-net-cat', {type:'bar', data:{labels:cd.map(c => c[0]), datasets:[{label:'Incidents', data:cd.map(c => c[1]), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({indexAxis:'y', plugins:{legend:{display:false}}})});
 
-  renderTbl('net-tbody', 'net-tbl-count', rows);
+  renderTbl('net-tbody', 'net-tbl-count', rows, 'net');
 }
 
 function renderDashboard(rows) {
@@ -1331,7 +1377,7 @@ function renderDashboard(rows) {
   const sd = countBy(rows, 'status');
   mkChart('ch-dash-status', {type:'doughnut', data:{labels:['Open','In Progress','Closed','Unknown'], datasets:[{data:STAT_ORDER.map(s => sd[s]||0), backgroundColor:STAT_ORDER.map(s => STAT_COLORS[s]), borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:11}, boxWidth:12}}}}});
 
-  renderTbl('dash-tbody', 'dash-tbl-count', rows);
+  renderTbl('dash-tbody', 'dash-tbl-count', rows, 'dash');
 }
 
 function renderTrends(rows) {
@@ -1370,7 +1416,7 @@ function applyFilters(page) {
   if (page === 'dashboard')  renderDashboard(rows);
   if (page === 'trends')     renderTrends(rows);
   if (page === 'categories') renderCategories(rows);
-  if (page === 'records')    renderTbl('rec-tbody', 'rec-tbl-count', rows);
+  if (page === 'records')    renderTbl('rec-tbody', 'rec-tbl-count', rows, 'rec');
 }
 
 // ═══════════════════════════════════════════════════════════════

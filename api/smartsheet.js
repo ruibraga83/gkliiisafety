@@ -1,100 +1,80 @@
-// api/smartsheet.js — Vercel Serverless Function (Node 18+)
+// api/smartsheet.js — Smartsheet data proxy (Vercel Serverless, Node 18+)
+// Token is server-side via SMARTSHEET_TOKEN env var — never exposed to clients.
+'use strict';
+const { cors, requireAuth } = require('./_lib');
+
+const SS_BASE = 'https://api.smartsheet.com/2.0';
+
 module.exports = async function handler(req, res) {
+  cors(res);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST')    return res.status(405).json({ error: 'Use POST.' });
 
-  // ── CORS on every response ──────────────────────────────────────────────────
-  res.setHeader('Access-Control-Allow-Origin',  '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Require valid session JWT
+  const session = requireAuth(req, res);
+  if (!session) return;
 
-  // ── Preflight ───────────────────────────────────────────────────────────────
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  const token = process.env.SMARTSHEET_TOKEN;
+  if (!token) return res.status(503).json({ error: 'SMARTSHEET_TOKEN env var not configured on server.' });
 
-  // ── Only POST ───────────────────────────────────────────────────────────────
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      error: 'Method Not Allowed. Use POST.',
-      received: req.method
-    });
-  }
-
-  // ── Parse body ──────────────────────────────────────────────────────────────
-  // Vercel auto-parses application/json into req.body
-  // but guard against edge cases
   let body = req.body;
   if (typeof body === 'string') {
-    try { body = JSON.parse(body); }
-    catch(e) {
-      return res.status(400).json({ error: 'Invalid JSON body', detail: e.message });
-    }
+    try { body = JSON.parse(body); } catch (e) { return res.status(400).json({ error: 'Invalid JSON body' }); }
   }
-  if (!body || typeof body !== 'object') {
-    return res.status(400).json({ error: 'Empty or non-object body received' });
-  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'Missing request body' });
 
-  const { token, sheetId } = body;
+  const { sheetId, rowId, action, include } = body;
 
-  console.log('[smartsheet] Request received:', {
-    hasToken:  !!token,
-    tokenLen:  token ? token.length : 0,
-    sheetId:   sheetId || 'MISSING',
-  });
+  if (!sheetId) return res.status(400).json({ error: 'sheetId is required.' });
 
-  // ── Validate ─────────────────────────────────────────────────────────────────
-  if (!token || String(token).trim() === '') {
-    return res.status(401).json({ error: 'Missing Smartsheet API token.' });
-  }
-  if (!sheetId || String(sheetId).trim() === '') {
-    return res.status(400).json({ error: 'Missing sheetId parameter.' });
-  }
-
-  // ── Call Smartsheet ──────────────────────────────────────────────────────────
-  const url = `https://api.smartsheet.com/2.0/sheets/${String(sheetId).trim()}`;
-  console.log('[smartsheet] Fetching:', url);
+  const ssHeaders = {
+    Authorization: `Bearer ${token}`,
+    Accept:        'application/json',
+  };
 
   try {
-    const upstream = await fetch(url, {
-      method:  'GET',
-      headers: {
-        'Authorization': `Bearer ${String(token).trim()}`,
-        'Content-Type':  'application/json',
-        'Accept':        'application/json',
-      },
-    });
+    // ── Row attachments list ──────────────────────────────────
+    if (action === 'attachments' && rowId) {
+      console.log(`[smartsheet] attachments: sheet=${sheetId} row=${rowId}`);
+      const r = await fetch(`${SS_BASE}/sheets/${sheetId}/rows/${rowId}/attachments`, { headers: ssHeaders });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data.message || 'Smartsheet error', errorCode: data.errorCode });
+      return res.json(data);
+    }
 
-    const text = await upstream.text();
-    console.log('[smartsheet] Upstream status:', upstream.status);
-    console.log('[smartsheet] Upstream body (first 300):', text.substring(0, 300));
+    // ── Single attachment URL ─────────────────────────────────
+    if (action === 'attachment-url' && body.attachmentId) {
+      const r = await fetch(`${SS_BASE}/attachments/${body.attachmentId}`, { headers: ssHeaders });
+      const data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data.message || 'Smartsheet error' });
+      return res.json(data);
+    }
+
+    // ── Sheet fetch ───────────────────────────────────────────
+    const params  = new URLSearchParams();
+    const inc     = include || 'attachments'; // always request attachment metadata
+    if (inc) params.set('include', inc);
+
+    const url = `${SS_BASE}/sheets/${String(sheetId).trim()}?${params}`;
+    console.log(`[smartsheet] sheet fetch: ${url} (user=${session.name}, role=${session.role})`);
+
+    const upstream = await fetch(url, { headers: ssHeaders });
+    const text     = await upstream.text();
 
     let data;
     try { data = JSON.parse(text); }
-    catch(e) {
-      return res.status(502).json({
-        error:  'Smartsheet returned non-JSON response',
-        status: upstream.status,
-        body:   text.substring(0, 500),
-      });
-    }
+    catch (e) { return res.status(502).json({ error: 'Smartsheet returned non-JSON', status: upstream.status, body: text.slice(0, 400) }); }
 
     if (!upstream.ok) {
-      console.error('[smartsheet] Upstream error:', data);
-      return res.status(upstream.status).json({
-        error:     data.message   || 'Smartsheet API error',
-        errorCode: data.errorCode || null,
-        refId:     data.refId     || null,
-        sheetId:   sheetId,
-      });
+      console.error('[smartsheet] upstream error:', data);
+      return res.status(upstream.status).json({ error: data.message || 'Smartsheet API error', errorCode: data.errorCode });
     }
 
-    console.log('[smartsheet] Success — rows:', data.rows ? data.rows.length : 'N/A');
+    console.log(`[smartsheet] success: ${data.name}, rows=${data.rows?.length ?? 'N/A'}`);
     return res.status(200).json(data);
 
   } catch (err) {
-    console.error('[smartsheet] Fetch threw:', err.message);
-    return res.status(500).json({
-      error:  'Proxy fetch failed',
-      detail: err.message,
-    });
+    console.error('[smartsheet] fetch threw:', err.message);
+    return res.status(500).json({ error: 'Proxy fetch failed', detail: err.message });
   }
 };

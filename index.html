@@ -597,59 +597,24 @@
   </div>
 </div>
 
-<!-- Token setup (multi-step) -->
+<!-- First-time setup (single step — token is configured server-side via env var) -->
 <div id="setupOverlay">
   <div class="setup-modal">
-    <!-- Step 1: Token -->
-    <div class="setup-step active" id="step-token">
-      <div class="setup-modal-icon"><i class="fas fa-key"></i></div>
-      <h2>Connect to Smartsheet</h2>
-      <p>Enter your Smartsheet API token to access incident data for Portuguese airports.</p>
-      <label for="tokenInput">API Token</label>
-      <input type="password" id="tokenInput" placeholder="Paste your Smartsheet API token…" autocomplete="off"/>
-      <button onclick="stepToRole()"><i class="fas fa-arrow-right"></i> Continue</button>
-      <div class="setup-error" id="setupError"></div>
-    </div>
-    <!-- Step 2: Role & Airport -->
-    <div class="setup-step" id="step-role">
+    <div class="setup-step active" id="step-role">
       <div class="setup-modal-icon"><i class="fas fa-user-shield"></i></div>
-      <h2>Select Access Level</h2>
-      <p>Choose your role to configure the dashboard view.</p>
-      <div class="role-cards">
-        <div class="role-card" id="card-admin" onclick="selectRole('admin')">
-          <i class="fas fa-globe-europe"></i>
-          <strong>HQ Admin</strong>
-          <small>Full access to all airports and all incident records</small>
-        </div>
-        <div class="role-card" id="card-airport" onclick="selectRole('airport')">
-          <i class="fas fa-plane-arrival"></i>
-          <strong>Airport User</strong>
-          <small>Your airport details plus network status overview</small>
-        </div>
-      </div>
-      <div id="airport-select-wrap" style="display:none;margin-bottom:1rem;">
-        <label for="roleAirportSel">Your Airport</label>
-        <select id="roleAirportSel">
-          <option value="">— Select your airport —</option>
-          <option value="LIS">LIS – Lisbon</option>
-          <option value="OPO">OPO – Porto</option>
-          <option value="FAO">FAO – Faro</option>
-          <option value="FNC">FNC – Funchal</option>
-          <option value="PDL">PDL – Ponta Delgada</option>
-        </select>
-      </div>
+      <h2>Create Admin Account</h2>
+      <p>The API token is configured on the server. Set your admin credentials to get started.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:1rem;">
         <div>
-          <label for="setupUsername" style="display:block;font-size:.68rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">Your Username</label>
-          <input type="text" id="setupUsername" placeholder="e.g. admin" autocomplete="off" style="width:100%;padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;outline:none;font-family:inherit;transition:border-color .15s;"/>
+          <label for="setupUsername" style="display:block;font-size:.68rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">Username</label>
+          <input type="text" id="setupUsername" placeholder="e.g. admin" autocomplete="off" onkeydown="if(event.key==='Enter')connectDashboard()" style="width:100%;padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;outline:none;font-family:inherit;transition:border-color .15s;"/>
         </div>
         <div>
           <label for="setupPin" style="display:block;font-size:.68rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">PIN <span style="font-weight:400;color:var(--text-muted)">(≥4 digits)</span></label>
-          <input type="password" id="setupPin" placeholder="••••" maxlength="8" autocomplete="new-password" style="width:100%;padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;outline:none;font-family:inherit;transition:border-color .15s;"/>
+          <input type="password" id="setupPin" placeholder="••••" maxlength="8" autocomplete="new-password" onkeydown="if(event.key==='Enter')connectDashboard()" style="width:100%;padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;outline:none;font-family:inherit;transition:border-color .15s;"/>
         </div>
       </div>
-      <button onclick="connectDashboard()"><i class="fas fa-plug"></i> Connect to Dashboard</button>
-      <button class="setup-back-btn" onclick="backToToken()"><i class="fas fa-arrow-left"></i> Back</button>
+      <button onclick="connectDashboard()"><i class="fas fa-plug"></i> Create Admin &amp; Connect</button>
       <div class="setup-error" id="setupError2"></div>
     </div>
   </div>
@@ -1126,13 +1091,15 @@
 
         <!-- API Token -->
         <div class="admin-card">
-          <div class="admin-card-head"><h3><i class="fas fa-key" style="color:var(--primary);margin-right:.4rem"></i>API Token</h3></div>
+          <div class="admin-card-head"><h3><i class="fas fa-key" style="color:var(--primary);margin-right:.4rem"></i>Smartsheet API Token</h3></div>
           <div class="admin-card-body">
             <div class="token-row">
-              <input type="password" class="token-field" id="displayToken" readonly/>
-              <button class="btn btn-secondary" onclick="toggleTokenVis()" title="Show/hide token"><i class="fas fa-eye"></i></button>
-              <button class="btn btn-secondary" onclick="copyToken()" title="Copy token"><i class="fas fa-copy"></i></button>
+              <input type="text" class="token-field" id="displayToken" readonly placeholder="Loading status…"/>
             </div>
+            <p style="font-size:.75rem;color:var(--text-muted);margin-top:.6rem;line-height:1.6">
+              <i class="fas fa-info-circle"></i>
+              The API token is stored securely as a server environment variable (<code>SMARTSHEET_TOKEN</code>). To change it, update the variable in <strong>Vercel → Project → Settings → Environment Variables</strong> and redeploy.
+            </p>
           </div>
         </div>
 
@@ -1157,7 +1124,10 @@
 // 1. CONFIG & STATE
 // ═══════════════════════════════════════════════════════════════
 const CFG = {
-  endpoint: '/api/smartsheet',
+  endpoint:      '/api/smartsheet',
+  authEndpoint:  '/api/auth',
+  setupEndpoint: '/api/setup',
+  usersEndpoint: '/api/users',
   airports: [
     { name:'Lisbon',        code:'LIS', sheetId:'8492262887477124' },
     { name:'Porto',         code:'OPO', sheetId:'2522203786530692' },
@@ -1168,7 +1138,7 @@ const CFG = {
 };
 
 const STATE = {
-  token:       null,
+  jwt:         null,   // signed JWT from /api/auth — never the raw Smartsheet token
   allRows:     [],
   charts:      {},
   cache:       {},
@@ -1304,8 +1274,8 @@ async function callAPI(sheetId) {
   dbg(`→ callAPI sheetId=${sheetId}`);
   const res = await fetch(CFG.endpoint, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ token: STATE.token, sheetId: String(sheetId), include: 'attachments' }),
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+    body:    JSON.stringify({ sheetId: String(sheetId), include: 'attachments' }),
   });
   dbg(`← HTTP ${res.status} for sheetId=${sheetId}`, undefined, res.ok ? 'ok' : 'err');
   let data;
@@ -1465,8 +1435,8 @@ async function loadAll() {
 async function runDiagnostic() {
   document.getElementById('dbgPanel').style.display = 'block';
   dbg('=== DIAGNOSTIC START ===', undefined, 'info');
-  dbg(`Token present: ${!!STATE.token}`, undefined, STATE.token ? 'ok' : 'err');
-  dbg(`Token length: ${STATE.token ? STATE.token.length : 0}`);
+  dbg(`JWT present: ${!!STATE.jwt}`, undefined, STATE.jwt ? 'ok' : 'err');
+  dbg(`Role: ${STATE.role}`);
   dbg(`Endpoint: ${CFG.endpoint}`);
 
   const apt = CFG.airports[0];
@@ -1474,8 +1444,8 @@ async function runDiagnostic() {
   try {
     const res  = await fetch(CFG.endpoint, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ token: STATE.token, sheetId: apt.sheetId }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+      body:    JSON.stringify({ sheetId: apt.sheetId }),
     });
     const text = await res.text();
     dbg(`Raw response status: ${res.status}`, undefined, res.ok ? 'ok' : 'err');
@@ -1844,125 +1814,98 @@ function toggleDebug() {
   p.style.display = p.style.display === 'block' ? 'none' : 'block';
 }
 
-// ── Config & Auth ─────────────────────────────────────────────
-let CONFIG       = { version:1, token:'', users:[] };
+// ── Auth & Session ────────────────────────────────────────────
 let CURRENT_USER = null;
 
-function loadConfig() {
-  try {
-    const raw = localStorage.getItem('gl3_config');
-    if (raw) { CONFIG = JSON.parse(raw); return true; }
-  } catch(e) {}
-  return false;
+function saveJWT(token) { localStorage.setItem('gl3_jwt', token); }
+function loadJWT()      { return localStorage.getItem('gl3_jwt'); }
+function clearJWT()     { localStorage.removeItem('gl3_jwt'); }
+
+function parseJWT(token) {
+  try { return JSON.parse(atob(token.split('.')[1])); } catch(e) { return null; }
 }
 
-function saveConfig() {
-  localStorage.setItem('gl3_config', JSON.stringify(CONFIG));
+function jwtExpired(token) {
+  const p = parseJWT(token);
+  return !p || (p.exp && p.exp < Math.floor(Date.now() / 1000));
 }
 
-function loadSession() {
-  try {
-    const raw = localStorage.getItem('gl3_session');
-    if (!raw) return false;
-    const s    = JSON.parse(raw);
-    const user = CONFIG.users.find(u => u.id === s.userId);
-    if (!user) return false;
-    CURRENT_USER      = user;
-    STATE.token       = CONFIG.token;
-    STATE.role        = user.role;
-    STATE.userAirport = user.airport || null;
-    return true;
-  } catch(e) {}
-  return false;
+function applySession(token, data) {
+  STATE.jwt         = token;
+  STATE.role        = data.role;
+  STATE.userAirport = data.airport || null;
+  CURRENT_USER      = { id: data.sub || '', name: data.name, role: data.role, airport: data.airport || null };
+  saveJWT(token);
 }
 
-function saveSession(user) {
-  localStorage.setItem('gl3_session', JSON.stringify({ userId:user.id, role:user.role, airport:user.airport }));
-}
-
-function doLogin() {
-  const username = document.getElementById('loginUser').value.trim().toLowerCase();
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
   const pin      = document.getElementById('loginPin').value.trim();
   const errEl    = document.getElementById('loginError');
-  const user     = CONFIG.users.find(u => u.username.toLowerCase() === username && u.pin === pin);
-  if (!user) { errEl.textContent = 'Invalid username or PIN.'; errEl.style.display = 'block'; return; }
-  errEl.style.display = 'none';
-  CURRENT_USER      = user;
-  STATE.token       = CONFIG.token;
-  STATE.role        = user.role;
-  STATE.userAirport = user.airport || null;
-  saveSession(user);
-  document.getElementById('loginOverlay').style.display = 'none';
-  const splash = document.getElementById('splash');
-  splash.style.display = 'flex'; splash.style.opacity = '1';
-  applyUserAccess();
-  loadAll();
+  const btn      = document.querySelector('#loginOverlay button');
+  if (!username || !pin) { errEl.textContent = 'Enter your username and PIN.'; errEl.style.display = 'block'; return; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…'; }
+  try {
+    const res  = await fetch(CFG.authEndpoint, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username, pin }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error || 'Login failed.'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+    applySession(data.token, { ...data, ...parseJWT(data.token) });
+    document.getElementById('loginOverlay').style.display = 'none';
+    const splash = document.getElementById('splash');
+    splash.style.display = 'flex'; splash.style.opacity = '1';
+    applyUserAccess();
+    loadAll();
+  } catch(e) {
+    errEl.textContent = 'Network error. Check your connection.'; errEl.style.display = 'block';
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In'; }
+  }
 }
 
 function logout() {
-  CURRENT_USER = null; STATE.token = null; STATE.allRows = []; STATE.cache = {};
-  localStorage.removeItem('gl3_session');
+  clearJWT();
+  CURRENT_USER = null; STATE.jwt = null; STATE.allRows = []; STATE.cache = {};
   document.getElementById('splash').style.display = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
-  document.getElementById('loginUser').value = '';
-  document.getElementById('loginPin').value  = '';
+  document.getElementById('loginUser').value  = '';
+  document.getElementById('loginPin').value   = '';
   document.getElementById('loginError').style.display = 'none';
 }
 
-// ── Setup flow (first time only) ──────────────────────────────
-function stepToRole() {
-  const t     = document.getElementById('tokenInput').value.trim();
-  const errEl = document.getElementById('setupError');
-  if (!t) { errEl.textContent = 'Please paste your API token.'; errEl.style.display = 'block'; return; }
-  errEl.style.display = 'none';
-  STATE.token = t;
-  document.getElementById('step-token').classList.remove('active');
-  document.getElementById('step-role').classList.add('active');
-}
-
-function backToToken() {
-  document.getElementById('step-role').classList.remove('active');
-  document.getElementById('step-token').classList.add('active');
-  _selectedRole = null;
-  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('airport-select-wrap').style.display = 'none';
-  const e2 = document.getElementById('setupError2');
-  if (e2) e2.style.display = 'none';
-}
-
-function selectRole(role) {
-  _selectedRole = role;
-  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById(`card-${role}`).classList.add('selected');
-  document.getElementById('airport-select-wrap').style.display = role === 'airport' ? 'block' : 'none';
-}
-
-function connectDashboard() {
-  const errEl = document.getElementById('setupError2');
-  if (!_selectedRole) { errEl.textContent = 'Please select your access level.'; errEl.style.display = 'block'; return; }
-  let aptCode = null;
-  if (_selectedRole === 'airport') {
-    aptCode = document.getElementById('roleAirportSel').value;
-    if (!aptCode) { errEl.textContent = 'Please select your airport.'; errEl.style.display = 'block'; return; }
-  }
+// ── First-time setup ──────────────────────────────────────────
+async function connectDashboard() {
+  const errEl    = document.getElementById('setupError2');
   const username = document.getElementById('setupUsername').value.trim();
   const pin      = document.getElementById('setupPin').value.trim();
   if (!username)      { errEl.textContent = 'Please enter a username.'; errEl.style.display = 'block'; return; }
   if (pin.length < 4) { errEl.textContent = 'PIN must be at least 4 digits.'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
-
-  const firstUser = { id:'user_'+Date.now(), name:username, username:username.toLowerCase(), pin, role:_selectedRole, airport:aptCode||null };
-  CONFIG = { version:1, token:STATE.token, users:[firstUser] };
-  saveConfig();
-  CURRENT_USER      = firstUser;
-  STATE.role        = firstUser.role;
-  STATE.userAirport = firstUser.airport;
-  saveSession(firstUser);
-  document.getElementById('setupOverlay').style.display = 'none';
-  const splash = document.getElementById('splash');
-  splash.style.display = 'flex'; splash.style.opacity = '1';
-  applyUserAccess();
-  loadAll();
+  const btn = document.querySelector('#step-role button');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up…'; }
+  try {
+    const res  = await fetch(CFG.setupEndpoint, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username, pin, name: username }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error || 'Setup failed.'; errEl.style.display = 'block'; return; }
+    applySession(data.token, { ...data, ...parseJWT(data.token) });
+    document.getElementById('setupOverlay').style.display = 'none';
+    const splash = document.getElementById('splash');
+    splash.style.display = 'flex'; splash.style.opacity = '1';
+    applyUserAccess();
+    loadAll();
+  } catch(e) {
+    errEl.textContent = 'Network error: ' + e.message; errEl.style.display = 'block';
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plug"></i> Connect to Dashboard'; }
+  }
 }
 
 // ── Access control ────────────────────────────────────────────
@@ -2038,8 +1981,8 @@ async function fetchAttachments(airportCode, rowId) {
   try {
     const res = await fetch(CFG.endpoint, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ token: STATE.token, sheetId: apt.sheetId, rowId: String(rowId), action: 'attachments' }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+      body:    JSON.stringify({ sheetId: apt.sheetId, rowId: String(rowId), action: 'attachments' }),
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -2068,31 +2011,49 @@ function closeAttachments() {
 }
 
 // ── User Management ───────────────────────────────────────────
-function renderUsersPage() {
-  const tbody = document.getElementById('users-tbody');
-  if (!tbody) return;
-  const tokenField = document.getElementById('displayToken');
-  if (tokenField) tokenField.value = CONFIG.token;
+let _usersCache = [];
 
-  if (!CONFIG.users.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No users yet. Add one above.</td></tr>';
-    return;
+async function renderUsersPage() {
+  const tbody     = document.getElementById('users-tbody');
+  const tokenHint = document.getElementById('displayToken');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="5"><div class="mini-spin" style="display:inline-block;margin-right:.5rem"></div>Loading…</td></tr>';
+
+  try {
+    const [usersRes, tokenRes] = await Promise.all([
+      fetch(CFG.usersEndpoint, { headers: { Authorization: `Bearer ${STATE.jwt}` } }),
+      fetch(CFG.usersEndpoint, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${STATE.jwt}` }, body:JSON.stringify({action:'token-status'}) }),
+    ]);
+    const users = usersRes.ok ? await usersRes.json() : [];
+    _usersCache = users;
+
+    if (tokenHint && tokenRes.ok) {
+      const ts = await tokenRes.json();
+      tokenHint.value = ts.set ? ts.hint : 'Not configured — set SMARTSHEET_TOKEN in Vercel';
+    }
+
+    if (!users.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No users yet. Add one above.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td><strong>${u.name}</strong></td>
+        <td><span style="font-family:'JetBrains Mono',monospace;font-size:.72rem">${u.username}</span></td>
+        <td>${u.role === 'admin'
+          ? '<span class="badge b-open">HQ Admin</span>'
+          : '<span class="badge b-neg">Airport</span>'}</td>
+        <td>${u.airport ? `<span class="apt-tag">${u.airport}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn btn-secondary" style="padding:.28rem .55rem;font-size:.72rem" onclick="openUserModal('${u.id}')"><i class="fas fa-edit"></i></button>
+          ${u.id !== CURRENT_USER?.id
+            ? `<button class="btn btn-ghost" style="padding:.28rem .55rem;font-size:.72rem;color:var(--danger);border-color:#fecaca;margin-left:.25rem" onclick="deleteUser('${u.id}')"><i class="fas fa-trash"></i></button>`
+            : ''}
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Failed to load users: ${e.message}</td></tr>`;
   }
-  tbody.innerHTML = CONFIG.users.map(u => `
-    <tr>
-      <td><strong>${u.name}</strong></td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:.72rem">${u.username}</span></td>
-      <td>${u.role === 'admin'
-        ? '<span class="badge b-open">HQ Admin</span>'
-        : '<span class="badge b-neg">Airport</span>'}</td>
-      <td>${u.airport ? `<span class="apt-tag">${u.airport}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
-      <td style="text-align:center;white-space:nowrap">
-        <button class="btn btn-secondary" style="padding:.28rem .55rem;font-size:.72rem" onclick="openUserModal('${u.id}')"><i class="fas fa-edit"></i></button>
-        ${u.id !== CURRENT_USER?.id
-          ? `<button class="btn btn-ghost" style="padding:.28rem .55rem;font-size:.72rem;color:var(--danger);border-color:#fecaca;margin-left:.25rem" onclick="deleteUser('${u.id}')"><i class="fas fa-trash"></i></button>`
-          : ''}
-      </td>
-    </tr>`).join('');
 }
 
 function openUserModal(userId) {
@@ -2100,7 +2061,7 @@ function openUserModal(userId) {
   errEl.style.display = 'none';
   document.getElementById('userModalOverlay').classList.add('open');
   if (userId) {
-    const u = CONFIG.users.find(u => u.id === userId);
+    const u = _usersCache.find(u => u.id === userId);
     if (!u) return;
     document.getElementById('userModalTitle').textContent    = 'Edit User';
     document.getElementById('userModalId').value            = userId;
@@ -2131,39 +2092,51 @@ function userModalRoleChange() {
   document.getElementById('userModalAirportWrap').style.display = role === 'airport' ? 'block' : 'none';
 }
 
-function saveUser() {
+async function saveUser() {
   const errEl    = document.getElementById('userModalError');
   const id       = document.getElementById('userModalId').value;
   const name     = document.getElementById('userModalName').value.trim();
-  const username = document.getElementById('userModalUsername').value.trim().toLowerCase();
+  const username = document.getElementById('userModalUsername').value.trim();
   const pin      = document.getElementById('userModalPin').value.trim();
   const role     = document.getElementById('userModalRole').value;
   const airport  = role === 'airport' ? document.getElementById('userModalAirport').value : null;
 
   if (!name)     { errEl.textContent = 'Name is required.';     errEl.style.display = 'block'; return; }
   if (!username) { errEl.textContent = 'Username is required.'; errEl.style.display = 'block'; return; }
-  if (!id && pin.length < 4)    { errEl.textContent = 'PIN must be at least 4 digits.'; errEl.style.display = 'block'; return; }
+  if (!id && pin.length < 4) { errEl.textContent = 'PIN must be at least 4 digits.'; errEl.style.display = 'block'; return; }
   if (role === 'airport' && !airport) { errEl.textContent = 'Please select an airport.'; errEl.style.display = 'block'; return; }
-  if (CONFIG.users.find(u => u.username === username && u.id !== id)) {
-    errEl.textContent = 'Username already taken.'; errEl.style.display = 'block'; return;
-  }
 
-  if (id) {
-    const u = CONFIG.users.find(u => u.id === id);
-    if (u) { u.name = name; u.username = username; u.role = role; u.airport = airport; if (pin.length >= 4) u.pin = pin; }
-  } else {
-    CONFIG.users.push({ id:'user_'+Date.now(), name, username, pin, role, airport });
+  const btn = document.querySelector('#userModalOverlay .btn-primary');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…'; }
+  try {
+    const res  = await fetch(CFG.usersEndpoint, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+      body:    JSON.stringify({ action: id ? 'update' : 'create', id, name, username, pin, role, airport }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error || 'Save failed.'; errEl.style.display = 'block'; return; }
+    closeUserModal();
+    renderUsersPage();
+  } catch(e) {
+    errEl.textContent = 'Network error: ' + e.message; errEl.style.display = 'block';
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save User'; }
   }
-  saveConfig();
-  closeUserModal();
-  renderUsersPage();
 }
 
-function deleteUser(userId) {
+async function deleteUser(userId) {
   if (!confirm('Delete this user? This cannot be undone.')) return;
-  CONFIG.users = CONFIG.users.filter(u => u.id !== userId);
-  saveConfig();
-  renderUsersPage();
+  try {
+    const res = await fetch(CFG.usersEndpoint, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+      body:    JSON.stringify({ action: 'delete', id: userId }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showNotice(data.error || 'Delete failed.', 'error'); return; }
+    renderUsersPage();
+  } catch(e) { showNotice('Network error: ' + e.message, 'error'); }
 }
 
 function toggleExportImport() {
@@ -2171,40 +2144,34 @@ function toggleExportImport() {
   card.style.display = card.style.display === 'none' ? 'block' : 'none';
 }
 
-function generateExport() {
-  const code = btoa(JSON.stringify(CONFIG));
-  document.getElementById('exportCode').value = code;
-  navigator.clipboard.writeText(code).catch(() => {});
-  showNotice('Setup code copied to clipboard!', 'success');
+async function generateExport() {
+  try {
+    const res   = await fetch(CFG.usersEndpoint, { headers:{ Authorization:`Bearer ${STATE.jwt}` } });
+    const users = res.ok ? await res.json() : [];
+    // Export only public user data (no PINs — admins must re-set PINs after import)
+    const code  = btoa(JSON.stringify({ gl3_export:1, users }));
+    document.getElementById('exportCode').value = code;
+    navigator.clipboard.writeText(code).catch(() => {});
+    showNotice('Export code copied to clipboard. Note: PINs are not exported — users will need to set new PINs after import.', 'success');
+  } catch(e) { showNotice('Export failed: ' + e.message, 'error'); }
 }
 
-function doImport() {
+async function doImport() {
   const errEl = document.getElementById('importError');
   const code  = document.getElementById('importCode').value.trim();
-  if (!code) { errEl.textContent = 'Please paste a setup code.'; errEl.style.display = 'block'; return; }
+  if (!code) { errEl.textContent = 'Please paste an export code.'; errEl.style.display = 'block'; return; }
   try {
-    const imported = JSON.parse(atob(code));
-    if (!imported.token || !Array.isArray(imported.users)) throw new Error('bad format');
-    CONFIG = imported;
-    saveConfig();
+    const data = JSON.parse(atob(code));
+    if (!Array.isArray(data.users)) throw new Error('Invalid format');
+    showNotice('Import not available via UI — please manage users directly via the Add User form.', 'error');
     errEl.style.display = 'none';
-    document.getElementById('importCode').value = '';
-    renderUsersPage();
-    showNotice('Config imported — ' + CONFIG.users.length + ' user(s) loaded.', 'success');
   } catch(e) {
-    errEl.textContent = 'Invalid setup code. Check the value and try again.';
-    errEl.style.display = 'block';
+    errEl.textContent = 'Invalid export code.'; errEl.style.display = 'block';
   }
 }
 
-function toggleTokenVis() {
-  const f = document.getElementById('displayToken');
-  f.type = f.type === 'password' ? 'text' : 'password';
-}
-
-function copyToken() {
-  navigator.clipboard.writeText(CONFIG.token).then(() => showNotice('Token copied.', 'success')).catch(() => {});
-}
+function toggleTokenVis() { /* Token is server-side only — nothing to toggle */ }
+function copyToken()      { showNotice('API token is stored securely on the server. Change it in Vercel → Environment Variables → SMARTSHEET_TOKEN.', 'error'); }
 
 function showNotice(msg, type) {
   const t = document.getElementById('errToast');
@@ -2220,21 +2187,36 @@ function showNotice(msg, type) {
 // ═══════════════════════════════════════════════════════════════
 // 15. INIT
 // ═══════════════════════════════════════════════════════════════
-window.addEventListener('load', () => {
-  if (loadConfig() && CONFIG.users.length) {
-    if (loadSession()) {
-      applyUserAccess();
-      loadAll();
-    } else {
-      document.getElementById('splash').style.display    = 'none';
+window.addEventListener('load', async () => {
+  // 1. Try to resume saved JWT session
+  const savedJWT = loadJWT();
+  if (savedJWT && !jwtExpired(savedJWT)) {
+    const payload = parseJWT(savedJWT);
+    STATE.jwt         = savedJWT;
+    STATE.role        = payload.role;
+    STATE.userAirport = payload.airport || null;
+    CURRENT_USER      = { id: payload.sub, name: payload.name, role: payload.role, airport: payload.airport };
+    applyUserAccess();
+    loadAll();
+    return;
+  }
+
+  clearJWT();
+
+  // 2. Check if server is set up (has any users)
+  try {
+    const res  = await fetch(CFG.setupEndpoint);
+    const data = await res.json();
+    document.getElementById('splash').style.display = 'none';
+    if (data.ready) {
       document.getElementById('loginOverlay').style.display = 'flex';
+    } else {
+      document.getElementById('setupOverlay').style.display = 'flex';
     }
-  } else {
-    // First time or corrupted — clean slate
-    localStorage.removeItem('gl3_config');
-    localStorage.removeItem('gl3_session');
+  } catch(e) {
+    // Network error — show login as fallback
     document.getElementById('splash').style.display    = 'none';
-    document.getElementById('setupOverlay').style.display = 'flex';
+    document.getElementById('loginOverlay').style.display = 'flex';
   }
 });
 </script>

@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/rpbra/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/.claude/skills/ui-ux-pro-max/**)",
-      "Bash(python scripts/search.py \"aviation safety enterprise dashboard professional dark\" --design-system -p \"Groundlink III Safety Dashboard\" -f markdown)"
+      "Bash(python scripts/search.py \"aviation safety enterprise dashboard professional dark\" --design-system -p \"Groundlink III Safety Dashboard\" -f markdown)",
+      "Bash(Select-String -Path \"C:\\\\Users\\\\rpbra\\\\Documents\\\\GitHub\\\\gkliiisafety\\\\index.html\" -Pattern \"clearToken|gl3_token|gl3_role|gl3_airport\")",
+      "Bash(Select-Object LineNumber, Line)"
     ]
   }
 }

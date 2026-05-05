@@ -503,6 +503,69 @@
       z-index:9500; display:none; box-shadow:var(--shadow-lg);
     }
 
+    /* ── Login overlay ───────────────────────────────── */
+    #loginOverlay {
+      position:fixed; inset:0; background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4338ca 100%);
+      display:none; align-items:center; justify-content:center; z-index:9100;
+    }
+    #loginOverlay .setup-modal { max-width:380px; }
+    #loginOverlay .setup-modal input { margin-bottom:.75rem; }
+
+    /* ── User modal ──────────────────────────────────── */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(15,23,42,.6);
+      backdrop-filter:blur(4px); z-index:8500;
+      display:none; align-items:center; justify-content:center;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+      background:var(--surface); border-radius:1rem; padding:1.75rem;
+      width:420px; max-width:92vw; box-shadow:var(--shadow-lg);
+    }
+    .modal-box h3 { font-size:1rem; font-weight:700; margin-bottom:1.25rem; }
+    .modal-row { margin-bottom:.875rem; }
+    .modal-row label {
+      display:block; font-size:.68rem; font-weight:600; color:var(--text-sec);
+      text-transform:uppercase; letter-spacing:.06em; margin-bottom:.3rem;
+    }
+    .modal-input {
+      width:100%; padding:.6rem .875rem; border:1.5px solid var(--border);
+      border-radius:var(--radius-sm); font-size:.875rem; outline:none;
+      font-family:inherit; color:var(--text); background:var(--surface);
+      transition:border-color .15s, box-shadow .15s;
+    }
+    .modal-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+    .modal-actions { display:flex; gap:.5rem; margin-top:1.25rem; }
+    .modal-actions .btn { flex:1; justify-content:center; }
+
+    /* ── Users page ──────────────────────────────────── */
+    .admin-card {
+      background:var(--surface); border-radius:var(--radius); border:1px solid var(--border);
+      box-shadow:var(--shadow-sm); overflow:hidden; margin-bottom:1rem;
+    }
+    .admin-card-head {
+      padding:.9rem 1.25rem; border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;
+      background:var(--bg);
+    }
+    .admin-card-head h3 { font-size:.84rem; font-weight:600; }
+    .admin-card-body { padding:1.25rem; }
+    .token-row { display:flex; gap:.5rem; align-items:center; }
+    .token-field {
+      flex:1; padding:.55rem .875rem; border:1.5px solid var(--border);
+      border-radius:var(--radius-sm); font-size:.78rem; font-family:'JetBrains Mono',monospace;
+      background:var(--bg); color:var(--text); outline:none;
+    }
+    .config-section { padding:1.25rem; border-top:1px solid var(--border); }
+    .config-section p { font-size:.8rem; color:var(--text-sec); margin-bottom:.75rem; line-height:1.6; }
+    .config-row { display:flex; gap:.5rem; margin-bottom:.5rem; }
+    .config-input {
+      flex:1; padding:.55rem .875rem; border:1.5px solid var(--border);
+      border-radius:var(--radius-sm); font-size:.72rem; font-family:'JetBrains Mono',monospace;
+      background:var(--bg); outline:none;
+    }
+    .config-input:focus { border-color:var(--primary); }
+
     /* ── Divider ─────────────────────────────────────── */
     .section-divider { height:1px; background:var(--border); margin:1.25rem 0; }
 
@@ -575,6 +638,16 @@
           <option value="PDL">PDL – Ponta Delgada</option>
         </select>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:1rem;">
+        <div>
+          <label for="setupUsername" style="display:block;font-size:.68rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">Your Username</label>
+          <input type="text" id="setupUsername" placeholder="e.g. admin" autocomplete="off" style="width:100%;padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;outline:none;font-family:inherit;transition:border-color .15s;"/>
+        </div>
+        <div>
+          <label for="setupPin" style="display:block;font-size:.68rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">PIN <span style="font-weight:400;color:var(--text-muted)">(≥4 digits)</span></label>
+          <input type="password" id="setupPin" placeholder="••••" maxlength="8" autocomplete="new-password" style="width:100%;padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;outline:none;font-family:inherit;transition:border-color .15s;"/>
+        </div>
+      </div>
       <button onclick="connectDashboard()"><i class="fas fa-plug"></i> Connect to Dashboard</button>
       <button class="setup-back-btn" onclick="backToToken()"><i class="fas fa-arrow-left"></i> Back</button>
       <div class="setup-error" id="setupError2"></div>
@@ -582,8 +655,66 @@
   </div>
 </div>
 
+<!-- Login overlay (shown when config exists but no session) -->
+<div id="loginOverlay">
+  <div class="setup-modal">
+    <div class="setup-modal-icon"><i class="fas fa-user-circle"></i></div>
+    <h2>Sign In</h2>
+    <p>Enter your username and PIN to access the dashboard.</p>
+    <label for="loginUser">Username</label>
+    <input type="text" id="loginUser" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label for="loginPin">PIN</label>
+    <input type="password" id="loginPin" placeholder="••••" maxlength="8" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+    <div class="setup-error" id="loginError"></div>
+  </div>
+</div>
+
 <!-- Error toast -->
 <div id="errToast"></div>
+
+<!-- User management modal -->
+<div id="userModalOverlay" class="modal-overlay" onclick="if(event.target===this)closeUserModal()">
+  <div class="modal-box">
+    <h3 id="userModalTitle">Add User</h3>
+    <input type="hidden" id="userModalId"/>
+    <div class="modal-row">
+      <label>Display Name</label>
+      <input class="modal-input" type="text" id="userModalName" placeholder="e.g. LIS Operations"/>
+    </div>
+    <div class="modal-row">
+      <label>Username</label>
+      <input class="modal-input" type="text" id="userModalUsername" placeholder="e.g. lis_ops" autocomplete="off"/>
+    </div>
+    <div class="modal-row">
+      <label>PIN <span style="font-weight:400;color:var(--text-muted);text-transform:none">(leave blank to keep existing)</span></label>
+      <input class="modal-input" type="password" id="userModalPin" placeholder="4–8 digits" maxlength="8" autocomplete="new-password"/>
+    </div>
+    <div class="modal-row">
+      <label>Role</label>
+      <select class="modal-input" id="userModalRole" onchange="userModalRoleChange()">
+        <option value="admin">HQ Admin</option>
+        <option value="airport">Airport User</option>
+      </select>
+    </div>
+    <div class="modal-row" id="userModalAirportWrap" style="display:none">
+      <label>Airport</label>
+      <select class="modal-input" id="userModalAirport">
+        <option value="">— Select —</option>
+        <option value="LIS">LIS – Lisbon</option>
+        <option value="OPO">OPO – Porto</option>
+        <option value="FAO">FAO – Faro</option>
+        <option value="FNC">FNC – Funchal</option>
+        <option value="PDL">PDL – Ponta Delgada</option>
+      </select>
+    </div>
+    <div class="setup-error" id="userModalError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveUser()"><i class="fas fa-save"></i> Save User</button>
+      <button class="btn btn-secondary" onclick="closeUserModal()"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- Attachment overlay & drawer -->
 <div id="attachOverlay" onclick="closeAttachments()"></div>
@@ -641,6 +772,11 @@
       <div class="sb-section" style="margin-top:.5rem;">Airports</div>
       <div id="airportList"></div>
 
+      <div class="sb-section" id="admin-section" style="margin-top:.5rem;">Admin</div>
+      <button class="nav-item" id="nav-users" data-page="users">
+        <i class="fas fa-users-cog"></i> User Management
+      </button>
+
       <div class="sb-section" style="margin-top:.5rem;">System</div>
       <button class="nav-item" onclick="refreshData()">
         <i class="fas fa-sync-alt"></i> Refresh Data
@@ -651,8 +787,8 @@
       <button class="nav-item" onclick="toggleDebug()">
         <i class="fas fa-bug"></i> Debug Panel
       </button>
-      <button class="nav-item" onclick="clearToken()" style="color:#f87171;">
-        <i class="fas fa-sign-out-alt"></i> Change Token
+      <button class="nav-item" onclick="logout()" style="color:#f87171;">
+        <i class="fas fa-sign-out-alt"></i> Sign Out
       </button>
     </nav>
 
@@ -942,6 +1078,66 @@
         </div>
       </div>
 
+      <!-- ═══ USERS ═══ -->
+      <div class="page" id="page-users">
+
+        <!-- Users table -->
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h3><i class="fas fa-users" style="color:var(--primary);margin-right:.4rem"></i>Users</h3>
+            <div style="display:flex;gap:.5rem">
+              <button class="btn btn-secondary" onclick="toggleExportImport()">
+                <i class="fas fa-exchange-alt"></i> Export / Import
+              </button>
+              <button class="btn btn-primary" onclick="openUserModal()">
+                <i class="fas fa-user-plus"></i> Add User
+              </button>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Name</th><th>Username</th><th>Role</th><th>Airport</th><th style="text-align:center">Actions</th>
+              </tr></thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Export / Import (collapsed by default) -->
+        <div class="admin-card" id="exportImportCard" style="display:none">
+          <div class="admin-card-head"><h3><i class="fas fa-exchange-alt" style="color:var(--primary);margin-right:.4rem"></i>Export / Import Config</h3></div>
+          <div class="config-section">
+            <p><strong>Export:</strong> Generate a setup code that includes the API token and all user accounts. Share it with users to configure the app on a new device.</p>
+            <div class="config-row">
+              <input type="text" class="config-input" id="exportCode" readonly placeholder="Click Export to generate…"/>
+              <button class="btn btn-primary" onclick="generateExport()"><i class="fas fa-copy"></i> Export &amp; Copy</button>
+            </div>
+          </div>
+          <div class="config-section" style="border-top:1px solid var(--border)">
+            <p><strong>Import:</strong> Paste a setup code received from an admin to configure this device with all users and token.</p>
+            <div class="config-row">
+              <input type="text" class="config-input" id="importCode" placeholder="Paste setup code here…"/>
+              <button class="btn btn-primary" onclick="doImport()"><i class="fas fa-download"></i> Import</button>
+            </div>
+            <div class="setup-error" id="importError" style="margin-top:.5rem"></div>
+          </div>
+        </div>
+
+        <!-- API Token -->
+        <div class="admin-card">
+          <div class="admin-card-head"><h3><i class="fas fa-key" style="color:var(--primary);margin-right:.4rem"></i>API Token</h3></div>
+          <div class="admin-card-body">
+            <div class="token-row">
+              <input type="password" class="token-field" id="displayToken" readonly/>
+              <button class="btn btn-secondary" onclick="toggleTokenVis()" title="Show/hide token"><i class="fas fa-eye"></i></button>
+              <button class="btn btn-secondary" onclick="copyToken()" title="Copy token"><i class="fas fa-copy"></i></button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page-users -->
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -1109,7 +1305,7 @@ async function callAPI(sheetId) {
   const res = await fetch(CFG.endpoint, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ token: STATE.token, sheetId: String(sheetId) }),
+    body:    JSON.stringify({ token: STATE.token, sheetId: String(sheetId), include: 'attachments' }),
   });
   dbg(`← HTTP ${res.status} for sheetId=${sheetId}`, undefined, res.ok ? 'ok' : 'err');
   let data;
@@ -1206,9 +1402,10 @@ function parseRows(sheet, airport) {
       risk:    normRisk(rawRisk),
       riskRaw: rawRisk,
       status:  normStatus(rawStatus),
-      synopsis:synopsis || '—',
-      airport: airport.code,
-      aptName: airport.name,
+      synopsis:       synopsis || '—',
+      airport:        airport.code,
+      aptName:        airport.name,
+      hasAttachments: Array.isArray(row.attachments) && row.attachments.length > 0,
     });
   });
 
@@ -1484,11 +1681,11 @@ function renderTbl(tbodyId, countId, rows, tableKey) {
       <td>${riskBadge(r.risk, r.riskRaw)}</td>
       <td>${statusBadge(r.status)}</td>
       <td style="max-width:260px;color:var(--text-sec)">${r.synopsis}</td>
-      <td style="text-align:center">
-        <button class="attach-btn" title="View attachments"
-          data-airport="${r.airport}" data-rowid="${r.id}" data-incno="${r.incNo}"
-          onclick="showAttachments(this)"><i class="fas fa-paperclip"></i></button>
-      </td>
+      <td style="text-align:center">${r.hasAttachments
+        ? `<button class="attach-btn" title="View attachments"
+            data-airport="${r.airport}" data-rowid="${r.id}" data-incno="${r.incNo}"
+            onclick="showAttachments(this)"><i class="fas fa-paperclip"></i></button>`
+        : ''}</td>
     </tr>`).join('');
 }
 
@@ -1592,6 +1789,7 @@ const PAGE_META = {
   trends:     ['Trends',             'Incident volume and risk trends over time'],
   categories: ['Categories',         'Category and sub-category breakdown'],
   records:    ['All Records',        'Full searchable incident list'],
+  users:      ['User Management',    'Manage access accounts and share credentials'],
 };
 
 function switchPage(page) {
@@ -1603,7 +1801,8 @@ function switchPage(page) {
   const [title, sub] = PAGE_META[page] || [page, ''];
   setText('pageTitle', title);
   setText('pageSubtitle', sub);
-  applyFilters(page);
+  if (page === 'users') renderUsersPage();
+  else applyFilters(page);
 }
 
 function buildAirportList() {
@@ -1631,6 +1830,9 @@ function buildAirportList() {
 document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
   btn.addEventListener('click', () => switchPage(btn.dataset.page));
 });
+// Hide admin section by default until applyUserAccess runs
+document.getElementById('admin-section').style.display = 'none';
+document.getElementById('nav-users').style.display     = 'none';
 
 // ═══════════════════════════════════════════════════════════════
 // 14. GLOBAL ACTIONS
@@ -1642,7 +1844,72 @@ function toggleDebug() {
   p.style.display = p.style.display === 'block' ? 'none' : 'block';
 }
 
-// ── Setup flow ────────────────────────────────────────────────
+// ── Config & Auth ─────────────────────────────────────────────
+let CONFIG       = { version:1, token:'', users:[] };
+let CURRENT_USER = null;
+
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem('gl3_config');
+    if (raw) { CONFIG = JSON.parse(raw); return true; }
+  } catch(e) {}
+  return false;
+}
+
+function saveConfig() {
+  localStorage.setItem('gl3_config', JSON.stringify(CONFIG));
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem('gl3_session');
+    if (!raw) return false;
+    const s    = JSON.parse(raw);
+    const user = CONFIG.users.find(u => u.id === s.userId);
+    if (!user) return false;
+    CURRENT_USER      = user;
+    STATE.token       = CONFIG.token;
+    STATE.role        = user.role;
+    STATE.userAirport = user.airport || null;
+    return true;
+  } catch(e) {}
+  return false;
+}
+
+function saveSession(user) {
+  localStorage.setItem('gl3_session', JSON.stringify({ userId:user.id, role:user.role, airport:user.airport }));
+}
+
+function doLogin() {
+  const username = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pin      = document.getElementById('loginPin').value.trim();
+  const errEl    = document.getElementById('loginError');
+  const user     = CONFIG.users.find(u => u.username.toLowerCase() === username && u.pin === pin);
+  if (!user) { errEl.textContent = 'Invalid username or PIN.'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  CURRENT_USER      = user;
+  STATE.token       = CONFIG.token;
+  STATE.role        = user.role;
+  STATE.userAirport = user.airport || null;
+  saveSession(user);
+  document.getElementById('loginOverlay').style.display = 'none';
+  const splash = document.getElementById('splash');
+  splash.style.display = 'flex'; splash.style.opacity = '1';
+  applyUserAccess();
+  loadAll();
+}
+
+function logout() {
+  CURRENT_USER = null; STATE.token = null; STATE.allRows = []; STATE.cache = {};
+  localStorage.removeItem('gl3_session');
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPin').value  = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// ── Setup flow (first time only) ──────────────────────────────
 function stepToRole() {
   const t     = document.getElementById('tokenInput').value.trim();
   const errEl = document.getElementById('setupError');
@@ -1678,36 +1945,24 @@ function connectDashboard() {
     aptCode = document.getElementById('roleAirportSel').value;
     if (!aptCode) { errEl.textContent = 'Please select your airport.'; errEl.style.display = 'block'; return; }
   }
+  const username = document.getElementById('setupUsername').value.trim();
+  const pin      = document.getElementById('setupPin').value.trim();
+  if (!username)      { errEl.textContent = 'Please enter a username.'; errEl.style.display = 'block'; return; }
+  if (pin.length < 4) { errEl.textContent = 'PIN must be at least 4 digits.'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
-  STATE.role        = _selectedRole;
-  STATE.userAirport = aptCode;
-  localStorage.setItem('gl3_token',   STATE.token);
-  localStorage.setItem('gl3_role',    STATE.role);
-  localStorage.setItem('gl3_airport', aptCode || '');
+
+  const firstUser = { id:'user_'+Date.now(), name:username, username:username.toLowerCase(), pin, role:_selectedRole, airport:aptCode||null };
+  CONFIG = { version:1, token:STATE.token, users:[firstUser] };
+  saveConfig();
+  CURRENT_USER      = firstUser;
+  STATE.role        = firstUser.role;
+  STATE.userAirport = firstUser.airport;
+  saveSession(firstUser);
   document.getElementById('setupOverlay').style.display = 'none';
   const splash = document.getElementById('splash');
-  splash.style.display  = 'flex';
-  splash.style.opacity  = '1';
+  splash.style.display = 'flex'; splash.style.opacity = '1';
   applyUserAccess();
   loadAll();
-}
-
-function clearToken() {
-  localStorage.removeItem('gl3_token');
-  localStorage.removeItem('gl3_role');
-  localStorage.removeItem('gl3_airport');
-  STATE.token       = null;
-  STATE.role        = 'admin';
-  STATE.userAirport = null;
-  STATE.allRows     = [];
-  STATE.cache       = {};
-  _selectedRole     = null;
-  document.getElementById('step-role').classList.remove('active');
-  document.getElementById('step-token').classList.add('active');
-  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('airport-select-wrap').style.display = 'none';
-  document.getElementById('roleBadge').style.display = 'none';
-  document.getElementById('setupOverlay').style.display = 'flex';
 }
 
 // ── Access control ────────────────────────────────────────────
@@ -1717,12 +1972,17 @@ function applyUserAccess() {
     badge.style.display = '';
     if (STATE.role === 'admin') {
       badge.className = 'role-badge admin';
-      badge.innerHTML = '<i class="fas fa-globe-europe"></i> HQ Admin';
+      badge.innerHTML = `<i class="fas fa-globe-europe"></i> ${CURRENT_USER?.name || 'HQ Admin'}`;
     } else {
       badge.className = 'role-badge airport';
-      badge.innerHTML = `<i class="fas fa-plane"></i> ${STATE.userAirport || 'Airport'}`;
+      badge.innerHTML = `<i class="fas fa-plane"></i> ${CURRENT_USER?.name || STATE.userAirport}`;
     }
   }
+  const usersNav     = document.getElementById('nav-users');
+  const adminSection = document.getElementById('admin-section');
+  const isAdmin      = STATE.role === 'admin';
+  if (usersNav)     usersNav.style.display     = isAdmin ? '' : 'none';
+  if (adminSection) adminSection.style.display = isAdmin ? '' : 'none';
   enforceAirportSelects();
 }
 
@@ -1807,22 +2067,173 @@ function closeAttachments() {
   document.getElementById('attachOverlay').style.display = 'none';
 }
 
+// ── User Management ───────────────────────────────────────────
+function renderUsersPage() {
+  const tbody = document.getElementById('users-tbody');
+  if (!tbody) return;
+  const tokenField = document.getElementById('displayToken');
+  if (tokenField) tokenField.value = CONFIG.token;
+
+  if (!CONFIG.users.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No users yet. Add one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = CONFIG.users.map(u => `
+    <tr>
+      <td><strong>${u.name}</strong></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:.72rem">${u.username}</span></td>
+      <td>${u.role === 'admin'
+        ? '<span class="badge b-open">HQ Admin</span>'
+        : '<span class="badge b-neg">Airport</span>'}</td>
+      <td>${u.airport ? `<span class="apt-tag">${u.airport}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <button class="btn btn-secondary" style="padding:.28rem .55rem;font-size:.72rem" onclick="openUserModal('${u.id}')"><i class="fas fa-edit"></i></button>
+        ${u.id !== CURRENT_USER?.id
+          ? `<button class="btn btn-ghost" style="padding:.28rem .55rem;font-size:.72rem;color:var(--danger);border-color:#fecaca;margin-left:.25rem" onclick="deleteUser('${u.id}')"><i class="fas fa-trash"></i></button>`
+          : ''}
+      </td>
+    </tr>`).join('');
+}
+
+function openUserModal(userId) {
+  const errEl = document.getElementById('userModalError');
+  errEl.style.display = 'none';
+  document.getElementById('userModalOverlay').classList.add('open');
+  if (userId) {
+    const u = CONFIG.users.find(u => u.id === userId);
+    if (!u) return;
+    document.getElementById('userModalTitle').textContent    = 'Edit User';
+    document.getElementById('userModalId').value            = userId;
+    document.getElementById('userModalName').value          = u.name;
+    document.getElementById('userModalUsername').value      = u.username;
+    document.getElementById('userModalPin').value           = '';
+    document.getElementById('userModalRole').value          = u.role;
+    document.getElementById('userModalAirport').value       = u.airport || '';
+    document.getElementById('userModalAirportWrap').style.display = u.role === 'airport' ? 'block' : 'none';
+  } else {
+    document.getElementById('userModalTitle').textContent    = 'Add User';
+    document.getElementById('userModalId').value            = '';
+    document.getElementById('userModalName').value          = '';
+    document.getElementById('userModalUsername').value      = '';
+    document.getElementById('userModalPin').value           = '';
+    document.getElementById('userModalRole').value          = 'airport';
+    document.getElementById('userModalAirport').value       = '';
+    document.getElementById('userModalAirportWrap').style.display = 'block';
+  }
+}
+
+function closeUserModal() {
+  document.getElementById('userModalOverlay').classList.remove('open');
+}
+
+function userModalRoleChange() {
+  const role = document.getElementById('userModalRole').value;
+  document.getElementById('userModalAirportWrap').style.display = role === 'airport' ? 'block' : 'none';
+}
+
+function saveUser() {
+  const errEl    = document.getElementById('userModalError');
+  const id       = document.getElementById('userModalId').value;
+  const name     = document.getElementById('userModalName').value.trim();
+  const username = document.getElementById('userModalUsername').value.trim().toLowerCase();
+  const pin      = document.getElementById('userModalPin').value.trim();
+  const role     = document.getElementById('userModalRole').value;
+  const airport  = role === 'airport' ? document.getElementById('userModalAirport').value : null;
+
+  if (!name)     { errEl.textContent = 'Name is required.';     errEl.style.display = 'block'; return; }
+  if (!username) { errEl.textContent = 'Username is required.'; errEl.style.display = 'block'; return; }
+  if (!id && pin.length < 4)    { errEl.textContent = 'PIN must be at least 4 digits.'; errEl.style.display = 'block'; return; }
+  if (role === 'airport' && !airport) { errEl.textContent = 'Please select an airport.'; errEl.style.display = 'block'; return; }
+  if (CONFIG.users.find(u => u.username === username && u.id !== id)) {
+    errEl.textContent = 'Username already taken.'; errEl.style.display = 'block'; return;
+  }
+
+  if (id) {
+    const u = CONFIG.users.find(u => u.id === id);
+    if (u) { u.name = name; u.username = username; u.role = role; u.airport = airport; if (pin.length >= 4) u.pin = pin; }
+  } else {
+    CONFIG.users.push({ id:'user_'+Date.now(), name, username, pin, role, airport });
+  }
+  saveConfig();
+  closeUserModal();
+  renderUsersPage();
+}
+
+function deleteUser(userId) {
+  if (!confirm('Delete this user? This cannot be undone.')) return;
+  CONFIG.users = CONFIG.users.filter(u => u.id !== userId);
+  saveConfig();
+  renderUsersPage();
+}
+
+function toggleExportImport() {
+  const card = document.getElementById('exportImportCard');
+  card.style.display = card.style.display === 'none' ? 'block' : 'none';
+}
+
+function generateExport() {
+  const code = btoa(JSON.stringify(CONFIG));
+  document.getElementById('exportCode').value = code;
+  navigator.clipboard.writeText(code).catch(() => {});
+  showNotice('Setup code copied to clipboard!', 'success');
+}
+
+function doImport() {
+  const errEl = document.getElementById('importError');
+  const code  = document.getElementById('importCode').value.trim();
+  if (!code) { errEl.textContent = 'Please paste a setup code.'; errEl.style.display = 'block'; return; }
+  try {
+    const imported = JSON.parse(atob(code));
+    if (!imported.token || !Array.isArray(imported.users)) throw new Error('bad format');
+    CONFIG = imported;
+    saveConfig();
+    errEl.style.display = 'none';
+    document.getElementById('importCode').value = '';
+    renderUsersPage();
+    showNotice('Config imported — ' + CONFIG.users.length + ' user(s) loaded.', 'success');
+  } catch(e) {
+    errEl.textContent = 'Invalid setup code. Check the value and try again.';
+    errEl.style.display = 'block';
+  }
+}
+
+function toggleTokenVis() {
+  const f = document.getElementById('displayToken');
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+
+function copyToken() {
+  navigator.clipboard.writeText(CONFIG.token).then(() => showNotice('Token copied.', 'success')).catch(() => {});
+}
+
+function showNotice(msg, type) {
+  const t = document.getElementById('errToast');
+  if (!t) return;
+  t.textContent    = msg;
+  t.style.background  = type === 'success' ? 'var(--success-pale)' : 'var(--danger-pale)';
+  t.style.borderColor = type === 'success' ? '#a7f3d0'             : '#fecaca';
+  t.style.color       = type === 'success' ? 'var(--success)'      : 'var(--c-crit)';
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 15. INIT
 // ═══════════════════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  const savedToken   = localStorage.getItem('gl3_token');
-  const savedRole    = localStorage.getItem('gl3_role');
-  const savedAirport = localStorage.getItem('gl3_airport');
-
-  if (savedToken && savedRole) {
-    STATE.token       = savedToken;
-    STATE.role        = savedRole;
-    STATE.userAirport = savedAirport || null;
-    applyUserAccess();
-    loadAll();
+  if (loadConfig() && CONFIG.users.length) {
+    if (loadSession()) {
+      applyUserAccess();
+      loadAll();
+    } else {
+      document.getElementById('splash').style.display    = 'none';
+      document.getElementById('loginOverlay').style.display = 'flex';
+    }
   } else {
-    document.getElementById('splash').style.display = 'none';
+    // First time or corrupted — clean slate
+    localStorage.removeItem('gl3_config');
+    localStorage.removeItem('gl3_session');
+    document.getElementById('splash').style.display    = 'none';
     document.getElementById('setupOverlay').style.display = 'flex';
   }
 });

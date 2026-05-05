@@ -1,13 +1,11 @@
 // api/smartsheet.js — Smartsheet data proxy (Vercel Serverless, Node 18+)
-// Token is server-side via SMARTSHEET_TOKEN env var — never exposed to clients.
 'use strict';
 const { cors, requireAuth } = require('../lib');
 
 const SS_BASE = 'https://api.smartsheet.com/2.0';
 
-// Smartsheet uses 64-bit integer IDs. JavaScript's JSON.parse silently rounds
-// numbers > Number.MAX_SAFE_INTEGER (9×10¹⁵), corrupting large IDs.
-// This parser quotes any bare integer ≥ 16 digits so they survive as strings.
+// Smartsheet IDs are 64-bit integers. JS JSON.parse rounds numbers > MAX_SAFE_INT.
+// Quote any bare integer ≥ 16 digits before parsing to preserve precision.
 function safeParse(text) {
   return JSON.parse(text.replace(/:\s*(\d{16,})/g, ':"$1"'));
 }
@@ -29,7 +27,7 @@ module.exports = async function handler(req, res) {
   if (!session) return;
 
   const token = process.env.SMARTSHEET_TOKEN;
-  if (!token) return res.status(503).json({ error: 'SMARTSHEET_TOKEN env var not configured.' });
+  if (!token) return res.status(503).json({ error: 'SMARTSHEET_TOKEN not configured.' });
 
   let body = req.body;
   if (typeof body === 'string') {
@@ -49,16 +47,17 @@ module.exports = async function handler(req, res) {
       if (!ok) return res.status(status).json({ error: data.message || 'Smartsheet error' });
 
       const items = Array.isArray(data.data) ? data.data : [];
-      console.log(`[smartsheet] ${items.length} attachments for row ${rowId}; ids: ${items.map(a=>a.id).join(',')}`);
+      console.log(`[smartsheet] ${items.length} attachments row=${rowId} ids=${items.map(a => a.id).join(',')}`);
 
-      // Fetch presigned download URL for each FILE attachment in parallel.
-      // IDs are now strings (safeParse) so they're passed to Smartsheet exactly.
+      // Use sheet-scoped URL — same path the official Smartsheet SDK uses.
+      // GET /sheets/{sheetId}/attachments/{id}  returns the presigned download URL.
       await Promise.all(
         items
           .filter(a => a.attachmentType === 'FILE')
           .map(async a => {
-            const { ok: uok, status: ust, data: ud } = await ssGet(`/attachments/${a.id}`, h);
-            console.log(`[smartsheet] attachment ${a.id} → ${ust}${uok ? ' url='+String(ud.url||'').slice(0,40) : ' err='+ud.message}`);
+            const path = `/sheets/${sheetId}/attachments/${a.id}`;
+            const { ok: uok, status: ust, data: ud } = await ssGet(path, h);
+            console.log(`[smartsheet] ${path} → ${ust}${uok ? ` url=${String(ud.url || '').slice(0, 60)}` : ` err=${ud.message}`}`);
             if (uok && ud.url) a.downloadUrl = ud.url;
           })
       );
@@ -66,10 +65,14 @@ module.exports = async function handler(req, res) {
       return res.json(data);
     }
 
-    // ── Single attachment URL (fallback) ──────────────────────────────────
+    // ── Single attachment URL (sheet-scoped when possible) ────────────────
     if (action === 'attachment-url' && attachmentId) {
-      const { ok, status, data } = await ssGet(`/attachments/${attachmentId}`, h);
-      console.log(`[smartsheet] attachment-url ${attachmentId} → ${status}`);
+      // Prefer sheet-scoped path; fall back to global if sheetId not provided
+      const path = sheetId
+        ? `/sheets/${sheetId}/attachments/${attachmentId}`
+        : `/attachments/${attachmentId}`;
+      const { ok, status, data } = await ssGet(path, h);
+      console.log(`[smartsheet] attachment-url ${path} → ${status}`);
       if (!ok) return res.status(status).json({ error: data.message || 'Smartsheet error' });
       return res.json(data);
     }

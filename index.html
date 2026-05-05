@@ -2080,10 +2080,12 @@ async function showAttachments(btn) {
   document.getElementById('attachDrawer').classList.add('open');
   document.getElementById('attachOverlay').style.display = 'block';
 
+  const apt        = CFG.airports.find(a => a.code === airportCode);
+  const sheetId    = apt ? apt.sheetId : null;
   const attachments = await fetchAttachments(airportCode, rowId);
-  console.log('[GL3] attachments raw:', JSON.stringify(attachments.map(a => ({id:a.id, name:a.name, type:a.attachmentType, hasUrl:!!a.downloadUrl}))));
-  // Cache presigned URLs fetched server-side
-  attachments.forEach(a => { if (a.downloadUrl) _urlCache.set(String(a.id), a.downloadUrl); });
+  console.log('[GL3] attachments:', attachments.map(a => ({id:a.id, name:a.name, hasUrl:!!a.downloadUrl})));
+  // Cache presigned URLs + sheetId for the fallback live-fetch path
+  attachments.forEach(a => { _urlCache.set(String(a.id), { url: a.downloadUrl || null, sheetId }); });
 
   if (!attachments.length) {
     body.innerHTML = '<div class="attach-empty"><i class="fas fa-paperclip"></i>No attachments found for this incident.</div>';
@@ -2135,12 +2137,14 @@ function attachCanPreview(mime) {
 // Uses the server-side cache populated at list time; falls back to a live API call.
 async function _getPresignedUrl(attachmentId) {
   const cached = _urlCache.get(String(attachmentId));
-  if (cached) { console.log('[GL3] URL from cache for', attachmentId); return cached; }
-  console.log('[GL3] cache miss — fetching URL live for', attachmentId);
+  if (cached?.url) { console.log('[GL3] URL from cache for', attachmentId); return cached.url; }
+  // Pass sheetId so proxy uses the sheet-scoped endpoint (same as Smartsheet SDK)
+  const sheetId = cached?.sheetId || null;
+  console.log('[GL3] live fetch for', attachmentId, 'sheetId=', sheetId);
   const res  = await fetch(CFG.endpoint, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
-    body:    JSON.stringify({ action: 'attachment-url', attachmentId: String(attachmentId) }),
+    body:    JSON.stringify({ action: 'attachment-url', attachmentId: String(attachmentId), sheetId }),
   });
   const data = await res.json();
   console.log('[GL3] attachment-url response', res.status, JSON.stringify(data).slice(0, 300));

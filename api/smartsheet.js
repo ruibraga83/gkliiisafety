@@ -34,19 +34,36 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    // ── Row attachments list ──────────────────────────────────
+    // ── Row attachments list (includes presigned URLs fetched server-side) ───
     if (action === 'attachments' && rowId) {
       console.log(`[smartsheet] attachments: sheet=${sheetId} row=${rowId}`);
       const r = await fetch(`${SS_BASE}/sheets/${sheetId}/rows/${rowId}/attachments`, { headers: ssHeaders });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data.message || 'Smartsheet error', errorCode: data.errorCode });
+
+      // Enrich each FILE attachment with its presigned download URL while
+      // we still have the token. Parallel fetch — typically 1-5 attachments.
+      const items = Array.isArray(data.data) ? data.data : [];
+      await Promise.all(
+        items
+          .filter(a => a.attachmentType === 'FILE')
+          .map(async a => {
+            try {
+              const ur = await fetch(`${SS_BASE}/attachments/${a.id}`, { headers: ssHeaders });
+              if (ur.ok) { const ud = await ur.json(); a.downloadUrl = ud.url || null; }
+              console.log(`[smartsheet] attachment ${a.id} url fetch: ${ur.status}`);
+            } catch (_) {}
+          })
+      );
+
       return res.json(data);
     }
 
-    // ── Single attachment URL ─────────────────────────────────
+    // ── Single attachment URL (fallback, kept for compatibility) ──────────
     if (action === 'attachment-url' && attachmentId) {
       const r = await fetch(`${SS_BASE}/attachments/${attachmentId}`, { headers: ssHeaders });
       const data = await r.json();
+      console.log(`[smartsheet] attachment-url ${attachmentId}: ${r.status}`, JSON.stringify(data).slice(0,150));
       if (!r.ok) return res.status(r.status).json({ error: data.message || 'Smartsheet error' });
       return res.json(data);
     }

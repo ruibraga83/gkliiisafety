@@ -418,6 +418,40 @@
     .attach-empty i { font-size:1.75rem; opacity:.25; display:block; margin-bottom:.75rem; }
     .attach-note { font-size:.72rem; color:var(--text-muted); padding:.75rem 1rem; border-top:1px solid var(--border); background:var(--bg); flex-shrink:0; line-height:1.5; }
 
+    /* ── Attachment preview lightbox ─────────────────────────── */
+    #attachPreview {
+      position:fixed; inset:0; z-index:9998;
+      background:rgba(0,0,0,.88);
+      display:none; align-items:center; justify-content:center;
+      padding:1.5rem; cursor:zoom-out;
+    }
+    #attachPreview.open { display:flex; }
+    #attachPreview img {
+      max-width:100%; max-height:90vh; border-radius:.5rem;
+      box-shadow:0 24px 64px rgba(0,0,0,.6); cursor:default;
+      object-fit:contain;
+    }
+    #attachPreview iframe {
+      width:min(900px,92vw); height:90vh; border:none;
+      border-radius:.5rem; background:#fff;
+    }
+    .preview-close-btn {
+      position:absolute; top:1rem; right:1rem;
+      background:rgba(255,255,255,.15); border:none; color:#fff;
+      width:40px; height:40px; border-radius:50%; font-size:1rem;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:background .15s;
+    }
+    .preview-close-btn:hover { background:rgba(255,255,255,.3); }
+    .preview-dl-btn {
+      position:absolute; top:1rem; left:1rem;
+      background:rgba(255,255,255,.15); border:none; color:#fff;
+      padding:.5rem 1rem; border-radius:.5rem; font-size:.8rem; font-weight:500;
+      cursor:pointer; display:flex; align-items:center; gap:.4rem;
+      text-decoration:none; transition:background .15s;
+    }
+    .preview-dl-btn:hover { background:rgba(255,255,255,.3); }
+
     /* ── Role / access ───────────────────────────────── */
     .role-badge {
       display:inline-flex; align-items:center; gap:.3rem; padding:.24rem .65rem;
@@ -1127,6 +1161,15 @@
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- Attachment preview lightbox -->
+<div id="attachPreview" onclick="if(event.target===this)closePreview()">
+  <button class="preview-close-btn" onclick="closePreview()"><i class="fas fa-times"></i></button>
+  <a id="previewDlBtn" class="preview-dl-btn" target="_blank" rel="noopener">
+    <i class="fas fa-download"></i> Download
+  </a>
+  <div id="previewContent"></div>
+</div>
 
 <!-- Debug panel -->
 <div id="dbgPanel">
@@ -2044,18 +2087,23 @@ async function showAttachments(btn) {
   }
 
   body.innerHTML = attachments.map(a => {
-    const icon   = attachIcon(a.attachmentType, a.mimeType);
-    const size   = a.sizeInKb ? `${a.sizeInKb} KB` : '';
-    const meta   = [size, a.attachmentType].filter(Boolean).join(' · ');
-    // LINK type attachments already have a URL in the list response;
-    // FILE type requires a separate signed-URL fetch on click.
-    const isLink = a.attachmentType === 'LINK' && a.url;
-    const dlBtn  = isLink
-      ? `<a href="${a.url}" target="_blank" rel="noopener" class="attach-dl" title="Open link"><i class="fas fa-external-link-alt"></i></a>`
-      : `<button class="attach-dl" style="background:none;border:none;cursor:pointer"
-           title="Download" onclick="openAttachmentUrl(this,'${a.id}')">
-           <i class="fas fa-download"></i>
-         </button>`;
+    const icon       = attachIcon(a.attachmentType, a.mimeType);
+    const size       = a.sizeInKb ? `${a.sizeInKb} KB` : '';
+    const meta       = [size, a.attachmentType].filter(Boolean).join(' · ');
+    const isLink     = a.attachmentType === 'LINK' && a.url;
+    const canPreview = !isLink && attachCanPreview(a.mimeType);
+
+    // All FILE attachments use the proxy — direct links, no popup-blocker risk
+    const proxyBase  = `/api/attachment-proxy?id=${a.id}&jwt=${encodeURIComponent(STATE.jwt)}&filename=${encodeURIComponent(a.name || '')}`;
+    const dlHref     = isLink ? a.url : `${proxyBase}&download=1`;
+
+    const previewBtn = canPreview
+      ? `<button class="attach-dl" style="background:none;border:none;cursor:pointer"
+           title="Preview" onclick="openPreview('${a.id}','${encodeURIComponent(a.name||'')}','${a.mimeType||''}')">
+           <i class="fas fa-eye"></i>
+         </button>`
+      : '';
+
     return `
       <div class="attach-item">
         <div class="attach-icon"><i class="${icon}"></i></div>
@@ -2063,33 +2111,45 @@ async function showAttachments(btn) {
           <div class="attach-name" title="${a.name}">${a.name}</div>
           <div class="attach-meta">${meta || 'File'}</div>
         </div>
-        ${dlBtn}
+        <div style="display:flex;gap:.25rem;flex-shrink:0">
+          ${previewBtn}
+          <a href="${dlHref}" target="_blank" rel="noopener" class="attach-dl" title="${isLink ? 'Open link' : 'Download'}">
+            <i class="fas fa-${isLink ? 'external-link-alt' : 'download'}"></i>
+          </a>
+        </div>
       </div>`;
   }).join('');
 }
 
-async function openAttachmentUrl(btn, attachmentId) {
-  const icon = btn.querySelector('i');
-  if (icon) icon.className = 'fas fa-spinner fa-spin';
-  btn.disabled = true;
-  try {
-    const res  = await fetch(CFG.endpoint, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
-      body:    JSON.stringify({ action: 'attachment-url', attachmentId: String(attachmentId) }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.url) {
-      showNotice('Could not retrieve download link from Smartsheet.', 'error');
-      return;
-    }
-    window.open(data.url, '_blank', 'noopener');
-  } catch(e) {
-    showNotice('Network error: ' + e.message, 'error');
-  } finally {
-    if (icon) icon.className = 'fas fa-download';
-    btn.disabled = false;
+function attachCanPreview(mime) {
+  if (!mime) return false;
+  return mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/');
+}
+
+function openPreview(attachmentId, encodedName, mime) {
+  const name     = decodeURIComponent(encodedName);
+  const proxyUrl = `/api/attachment-proxy?id=${attachmentId}&jwt=${encodeURIComponent(STATE.jwt)}&filename=${encodedName}`;
+  const dlUrl    = `${proxyUrl}&download=1`;
+
+  const content  = document.getElementById('previewContent');
+  const dlBtn    = document.getElementById('previewDlBtn');
+  if (dlBtn) dlBtn.href = dlUrl;
+
+  if (mime.startsWith('image/')) {
+    content.innerHTML = `<img src="${proxyUrl}" alt="${name}" loading="lazy"/>`;
+  } else if (mime === 'application/pdf') {
+    content.innerHTML = `<iframe src="${proxyUrl}" title="${name}"></iframe>`;
+  } else if (mime.startsWith('video/')) {
+    content.innerHTML = `<video src="${proxyUrl}" controls style="max-width:100%;max-height:85vh;border-radius:.5rem"></video>`;
   }
+
+  document.getElementById('attachPreview').classList.add('open');
+}
+
+function closePreview() {
+  const el = document.getElementById('attachPreview');
+  el.classList.remove('open');
+  document.getElementById('previewContent').innerHTML = '';
 }
 
 async function fetchAttachments(airportCode, rowId) {

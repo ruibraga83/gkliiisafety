@@ -1227,12 +1227,17 @@ function normRisk(raw) {
 }
 
 function normStatus(raw) {
-  if (!raw) return 'unknown';
-  const s = String(raw).toLowerCase().replace(/[^a-z]/g, '');
-  if (s.includes('inprogress')||s.includes('progress')||s.includes('ongoing')) return 'inprogress';
-  if (s.includes('closed')||s.includes('complete')||s.includes('resolved')||s.includes('done')) return 'closed';
-  if (s.includes('open')||s.includes('new')) return 'open';
-  return 'unknown';
+  if (raw === null || raw === undefined || String(raw).trim() === '') return 'open';
+  const s = String(raw).toLowerCase().trim();
+  // "Closed" checkbox column: yes/true = closed, no/false = open
+  if (s === 'yes' || s === 'true'  || s === '1') return 'closed';
+  if (s === 'no'  || s === 'false' || s === '0') return 'open';
+  // Traditional status text
+  const c = s.replace(/[^a-z]/g, '');
+  if (c.includes('inprogress') || c.includes('progress') || c.includes('ongoing')) return 'inprogress';
+  if (c.includes('closed') || c.includes('complete') || c.includes('resolved') || c.includes('done')) return 'closed';
+  if (c.includes('open') || c.includes('new')) return 'open';
+  return 'open';
 }
 
 function parseDate(str) {
@@ -1344,7 +1349,7 @@ function parseRows(sheet, airport) {
     subCat:  findCol(['Sub-Category','Sub Category','Subcategory','Sub-category','SubCategory','Sub Type']),
     risk:    findCol(['Risk Assessment','Risk Score','Risk','Risk Level','RPN','Risk Rating']),
     sev:     findCol(['Severity','Priority','Level','Severity Level']),
-    status:  findCol(['Status','State','Condition','Current Status']),
+    status:  findCol(['Closed','Status','State','Condition','Current Status']),
     synopsis:findCol(['Synopsis','Ground Event Summary','Summary','Description','Event Description','Details','Notes','Comments','Event Summary']),
   };
 
@@ -2039,10 +2044,18 @@ async function showAttachments(btn) {
   }
 
   body.innerHTML = attachments.map(a => {
-    const icon = attachIcon(a.attachmentType, a.mimeType);
-    const size = a.sizeInKb ? `${a.sizeInKb} KB` : '';
-    const meta = [size, a.attachmentType].filter(Boolean).join(' · ');
-    const href = a.url ? `href="${a.url}" target="_blank"` : '';
+    const icon   = attachIcon(a.attachmentType, a.mimeType);
+    const size   = a.sizeInKb ? `${a.sizeInKb} KB` : '';
+    const meta   = [size, a.attachmentType].filter(Boolean).join(' · ');
+    // LINK type attachments already have a URL in the list response;
+    // FILE type requires a separate signed-URL fetch on click.
+    const isLink = a.attachmentType === 'LINK' && a.url;
+    const dlBtn  = isLink
+      ? `<a href="${a.url}" target="_blank" rel="noopener" class="attach-dl" title="Open link"><i class="fas fa-external-link-alt"></i></a>`
+      : `<button class="attach-dl" style="background:none;border:none;cursor:pointer"
+           title="Download" onclick="openAttachmentUrl(this,'${a.id}')">
+           <i class="fas fa-download"></i>
+         </button>`;
     return `
       <div class="attach-item">
         <div class="attach-icon"><i class="${icon}"></i></div>
@@ -2050,9 +2063,33 @@ async function showAttachments(btn) {
           <div class="attach-name" title="${a.name}">${a.name}</div>
           <div class="attach-meta">${meta || 'File'}</div>
         </div>
-        <a ${href} class="attach-dl" title="Download / Open"><i class="fas fa-external-link-alt"></i></a>
+        ${dlBtn}
       </div>`;
   }).join('');
+}
+
+async function openAttachmentUrl(btn, attachmentId) {
+  const icon = btn.querySelector('i');
+  if (icon) icon.className = 'fas fa-spinner fa-spin';
+  btn.disabled = true;
+  try {
+    const res  = await fetch(CFG.endpoint, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+      body:    JSON.stringify({ action: 'attachment-url', attachmentId: String(attachmentId) }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) {
+      showNotice('Could not retrieve download link from Smartsheet.', 'error');
+      return;
+    }
+    window.open(data.url, '_blank', 'noopener');
+  } catch(e) {
+    showNotice('Network error: ' + e.message, 'error');
+  } finally {
+    if (icon) icon.className = 'fas fa-download';
+    btn.disabled = false;
+  }
 }
 
 async function fetchAttachments(airportCode, rowId) {

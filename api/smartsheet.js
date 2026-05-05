@@ -23,9 +23,10 @@ module.exports = async function handler(req, res) {
   }
   if (!body || typeof body !== 'object') return res.status(400).json({ error: 'Missing request body' });
 
-  const { sheetId, rowId, action, include } = body;
+  const { sheetId, rowId, action, include, attachmentId } = body;
 
-  if (!sheetId) return res.status(400).json({ error: 'sheetId is required.' });
+  // attachment-url only needs attachmentId, not sheetId
+  if (!sheetId && action !== 'attachment-url') return res.status(400).json({ error: 'sheetId is required.' });
 
   const ssHeaders = {
     Authorization: `Bearer ${token}`,
@@ -43,8 +44,8 @@ module.exports = async function handler(req, res) {
     }
 
     // ── Single attachment URL ─────────────────────────────────
-    if (action === 'attachment-url' && body.attachmentId) {
-      const r = await fetch(`${SS_BASE}/attachments/${body.attachmentId}`, { headers: ssHeaders });
+    if (action === 'attachment-url' && attachmentId) {
+      const r = await fetch(`${SS_BASE}/attachments/${attachmentId}`, { headers: ssHeaders });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data.message || 'Smartsheet error' });
       return res.json(data);

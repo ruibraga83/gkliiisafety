@@ -3,11 +3,10 @@
   "outputDirectory": ".",
   "buildCommand": "",
   "rewrites": [
-    { "source": "/api/smartsheet",       "destination": "/api/smartsheet" },
-    { "source": "/api/auth",             "destination": "/api/auth" },
-    { "source": "/api/setup",            "destination": "/api/setup" },
-    { "source": "/api/users",            "destination": "/api/users" },
-    { "source": "/api/attachment-proxy", "destination": "/api/attachment-proxy" }
+    { "source": "/api/smartsheet", "destination": "/api/smartsheet" },
+    { "source": "/api/auth",       "destination": "/api/auth" },
+    { "source": "/api/setup",      "destination": "/api/setup" },
+    { "source": "/api/users",      "destination": "/api/users" }
   ],
   "headers": [
     {

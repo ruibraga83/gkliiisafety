@@ -2093,16 +2093,22 @@ async function showAttachments(btn) {
     const isLink     = a.attachmentType === 'LINK' && a.url;
     const canPreview = !isLink && attachCanPreview(a.mimeType);
 
-    // All FILE attachments use the proxy — direct links, no popup-blocker risk
-    const proxyBase  = `/api/attachment-proxy?id=${a.id}&jwt=${encodeURIComponent(STATE.jwt)}&filename=${encodeURIComponent(a.name || '')}`;
-    const dlHref     = isLink ? a.url : `${proxyBase}&download=1`;
-
     const previewBtn = canPreview
       ? `<button class="attach-dl" style="background:none;border:none;cursor:pointer"
-           title="Preview" onclick="openPreview('${a.id}','${encodeURIComponent(a.name||'')}','${a.mimeType||''}')">
+           title="Preview" onclick="openPreview(event,'${a.id}','${encodeURIComponent(a.name||'')}','${a.mimeType||''}')">
            <i class="fas fa-eye"></i>
          </button>`
       : '';
+
+    // LINK type: direct href. FILE type: fetch presigned URL on click (window pre-opened to beat popup-blocker)
+    const dlBtn = isLink
+      ? `<a href="${a.url}" target="_blank" rel="noopener" class="attach-dl" title="Open link">
+           <i class="fas fa-external-link-alt"></i>
+         </a>`
+      : `<button class="attach-dl" style="background:none;border:none;cursor:pointer"
+           title="Download" onclick="downloadAttachment(event,'${a.id}')">
+           <i class="fas fa-download"></i>
+         </button>`;
 
     return `
       <div class="attach-item">
@@ -2111,12 +2117,7 @@ async function showAttachments(btn) {
           <div class="attach-name" title="${a.name}">${a.name}</div>
           <div class="attach-meta">${meta || 'File'}</div>
         </div>
-        <div style="display:flex;gap:.25rem;flex-shrink:0">
-          ${previewBtn}
-          <a href="${dlHref}" target="_blank" rel="noopener" class="attach-dl" title="${isLink ? 'Open link' : 'Download'}">
-            <i class="fas fa-${isLink ? 'external-link-alt' : 'download'}"></i>
-          </a>
-        </div>
+        <div style="display:flex;gap:.25rem;flex-shrink:0">${previewBtn}${dlBtn}</div>
       </div>`;
   }).join('');
 }
@@ -2126,29 +2127,81 @@ function attachCanPreview(mime) {
   return mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/');
 }
 
-function openPreview(attachmentId, encodedName, mime) {
-  const name     = decodeURIComponent(encodedName);
-  const proxyUrl = `/api/attachment-proxy?id=${attachmentId}&jwt=${encodeURIComponent(STATE.jwt)}&filename=${encodedName}`;
-  const dlUrl    = `${proxyUrl}&download=1`;
+// Fetch the Smartsheet presigned URL, then open/display it.
+// We open the target window BEFORE the await so popup-blockers don't intervene.
+async function _getPresignedUrl(attachmentId) {
+  const res  = await fetch(CFG.endpoint, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+    body:    JSON.stringify({ action: 'attachment-url', attachmentId: String(attachmentId) }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.url) throw new Error(data.error || 'Could not retrieve URL from Smartsheet');
+  return data.url;
+}
 
-  const content  = document.getElementById('previewContent');
-  const dlBtn    = document.getElementById('previewDlBtn');
-  if (dlBtn) dlBtn.href = dlUrl;
-
-  if (mime.startsWith('image/')) {
-    content.innerHTML = `<img src="${proxyUrl}" alt="${name}" loading="lazy"/>`;
-  } else if (mime === 'application/pdf') {
-    content.innerHTML = `<iframe src="${proxyUrl}" title="${name}"></iframe>`;
-  } else if (mime.startsWith('video/')) {
-    content.innerHTML = `<video src="${proxyUrl}" controls style="max-width:100%;max-height:85vh;border-radius:.5rem"></video>`;
+async function downloadAttachment(event, attachmentId) {
+  const btn = event.currentTarget;
+  const icon = btn.querySelector('i');
+  // Open blank window first — preserves user gesture so popup blocker allows it
+  const win = window.open('about:blank', '_blank', 'noopener,noreferrer');
+  if (icon) icon.className = 'fas fa-spinner fa-spin';
+  btn.disabled = true;
+  try {
+    const url = await _getPresignedUrl(attachmentId);
+    if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
+  } catch(e) {
+    if (win) win.close();
+    showNotice(e.message, 'error');
+  } finally {
+    if (icon) icon.className = 'fas fa-download';
+    btn.disabled = false;
   }
+}
 
+async function openPreview(event, attachmentId, encodedName, mime) {
+  const name    = decodeURIComponent(encodedName);
+  const content = document.getElementById('previewContent');
+  const dlBtn   = document.getElementById('previewDlBtn');
+
+  // For non-image types open a new tab before the await
+  const needsWin = !mime.startsWith('image/') && !mime.startsWith('video/');
+  const win      = needsWin ? window.open('about:blank', '_blank', 'noopener,noreferrer') : null;
+
+  content.innerHTML = '<div style="color:#fff;font-size:.85rem;padding:2rem">Loading…</div>';
   document.getElementById('attachPreview').classList.add('open');
+
+  try {
+    const url = await _getPresignedUrl(attachmentId);
+
+    // Wire up the download button in the lightbox
+    if (dlBtn) {
+      dlBtn.onclick = async (e) => {
+        const dw = window.open('about:blank', '_blank', 'noopener,noreferrer');
+        try { const u = await _getPresignedUrl(attachmentId); if (dw) dw.location.href = u; }
+        catch(err) { if (dw) dw.close(); showNotice(err.message, 'error'); }
+      };
+      dlBtn.removeAttribute('href');
+    }
+
+    if (mime.startsWith('image/')) {
+      // <img src> works directly with S3 presigned URLs — no CORS restriction on image loads
+      content.innerHTML = `<img src="${url}" alt="${name}" style="max-width:100%;max-height:90vh;border-radius:.5rem;object-fit:contain"/>`;
+    } else if (mime.startsWith('video/')) {
+      content.innerHTML = `<video src="${url}" controls style="max-width:100%;max-height:85vh;border-radius:.5rem"></video>`;
+    } else {
+      // PDF / other: redirect the pre-opened window
+      if (win) { win.location.href = url; } else { window.open(url, '_blank', 'noopener'); }
+      closePreview();
+    }
+  } catch(e) {
+    if (win) win.close();
+    content.innerHTML = `<div style="color:#f87171;padding:2rem;font-size:.85rem">${e.message}</div>`;
+  }
 }
 
 function closePreview() {
-  const el = document.getElementById('attachPreview');
-  el.classList.remove('open');
+  document.getElementById('attachPreview').classList.remove('open');
   document.getElementById('previewContent').innerHTML = '';
 }
 

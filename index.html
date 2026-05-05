@@ -2127,8 +2127,7 @@ function attachCanPreview(mime) {
   return mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/');
 }
 
-// Fetch the Smartsheet presigned URL, then open/display it.
-// We open the target window BEFORE the await so popup-blockers don't intervene.
+// Fetch the Smartsheet presigned URL for a file attachment.
 async function _getPresignedUrl(attachmentId) {
   const res  = await fetch(CFG.endpoint, {
     method:  'POST',
@@ -2136,7 +2135,9 @@ async function _getPresignedUrl(attachmentId) {
     body:    JSON.stringify({ action: 'attachment-url', attachmentId: String(attachmentId) }),
   });
   const data = await res.json();
-  if (!res.ok || !data.url) throw new Error(data.error || 'Could not retrieve URL from Smartsheet');
+  console.log('[GL3] attachment-url response', res.status, JSON.stringify(data).slice(0,200));
+  if (!res.ok)  throw new Error(data.error || `Smartsheet returned HTTP ${res.status}`);
+  if (!data.url) throw new Error('Smartsheet response has no url field — check Smartsheet API token permissions');
   return data.url;
 }
 
@@ -2185,18 +2186,33 @@ async function openPreview(event, attachmentId, encodedName, mime) {
     }
 
     if (mime.startsWith('image/')) {
-      // <img src> works directly with S3 presigned URLs — no CORS restriction on image loads
-      content.innerHTML = `<img src="${url}" alt="${name}" style="max-width:100%;max-height:90vh;border-radius:.5rem;object-fit:contain"/>`;
+      // Use DOM API — innerHTML would corrupt & chars in the presigned S3 URL
+      content.innerHTML = '';
+      const img = document.createElement('img');
+      img.alt   = name;
+      img.style.cssText = 'max-width:100%;max-height:90vh;border-radius:.5rem;object-fit:contain';
+      img.onerror = () => { content.innerHTML = `<div style="color:#f87171;padding:2rem;font-size:.85rem">Failed to load image — the link may have expired. Close and reopen the preview to retry.</div>`; };
+      img.src = url; // set AFTER onerror to avoid race condition
+      content.appendChild(img);
     } else if (mime.startsWith('video/')) {
-      content.innerHTML = `<video src="${url}" controls style="max-width:100%;max-height:85vh;border-radius:.5rem"></video>`;
+      content.innerHTML = '';
+      const vid = document.createElement('video');
+      vid.controls = true;
+      vid.style.cssText = 'max-width:100%;max-height:85vh;border-radius:.5rem';
+      vid.src = url;
+      content.appendChild(vid);
     } else {
       // PDF / other: redirect the pre-opened window
       if (win) { win.location.href = url; } else { window.open(url, '_blank', 'noopener'); }
       closePreview();
     }
   } catch(e) {
+    console.error('[GL3] openPreview error:', e);
     if (win) win.close();
-    content.innerHTML = `<div style="color:#f87171;padding:2rem;font-size:.85rem">${e.message}</div>`;
+    content.innerHTML = `<div style="color:#f87171;padding:2rem;font-size:.85rem;line-height:1.6">
+      <strong>Preview failed</strong><br>${e.message}<br>
+      <span style="opacity:.7;font-size:.75rem">Open browser DevTools → Console for details.</span>
+    </div>`;
   }
 }
 

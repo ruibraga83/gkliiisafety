@@ -858,8 +858,9 @@
           <div class="chart-card-head">
             <h3>Monthly Incidents by Airport</h3>
             <div style="display:flex;gap:.35rem">
-              <button id="btn-stacked" class="btn btn-secondary" style="padding:.26rem .65rem;font-size:.72rem" onclick="setAptChartMode('stacked')">Stacked</button>
-              <button id="btn-grouped" class="btn btn-ghost"     style="padding:.26rem .65rem;font-size:.72rem" onclick="setAptChartMode('grouped')">Grouped</button>
+              <button id="btn-stacked" class="btn btn-secondary" style="padding:.26rem .65rem;font-size:.72rem" onclick="setAptChartMode('stacked')"><i class="fas fa-chart-bar"></i> Stacked</button>
+              <button id="btn-grouped" class="btn btn-ghost"     style="padding:.26rem .65rem;font-size:.72rem" onclick="setAptChartMode('grouped')"><i class="fas fa-chart-bar" style="transform:scaleX(-1)"></i> Grouped</button>
+              <button id="btn-line"    class="btn btn-ghost"     style="padding:.26rem .65rem;font-size:.72rem" onclick="setAptChartMode('line')"><i class="fas fa-chart-line"></i> Line</button>
             </div>
           </div>
           <div class="chart-wrap" style="height:280px"><canvas id="ch-net-monthly-apt"></canvas></div>
@@ -1597,25 +1598,43 @@ let _aptChartMode = 'stacked';
 
 function setAptChartMode(mode) {
   _aptChartMode = mode;
-  const stk = document.getElementById('btn-stacked');
-  const grp = document.getElementById('btn-grouped');
-  if (stk) { stk.className = `btn ${mode === 'stacked' ? 'btn-secondary' : 'btn-ghost'}`; stk.style.cssText = 'padding:.26rem .65rem;font-size:.72rem'; }
-  if (grp) { grp.className = `btn ${mode === 'grouped' ? 'btn-secondary' : 'btn-ghost'}`; grp.style.cssText = 'padding:.26rem .65rem;font-size:.72rem'; }
+  ['stacked','grouped','line'].forEach(m => {
+    const btn = document.getElementById(`btn-${m}`);
+    if (btn) btn.className = `btn ${mode === m ? 'btn-secondary' : 'btn-ghost'}`;
+  });
   applyFilters('network');
 }
 
 function mkAptMonthlyChart(canvasId, rows) {
-  const m12      = last12();
-  const stacked  = _aptChartMode === 'stacked';
-  const datasets = CFG.airports.map((apt, i) => ({
-    label:           `${apt.code}`,
-    data:            m12.map(m => rows.filter(r => r.airport === apt.code && r.year === m.y && r.month === m.m).length),
-    backgroundColor: AIRPORT_COLORS[i],
-    borderRadius:    stacked ? 0 : 4,
-    borderSkipped:   false,
-  }));
+  const m12     = last12();
+  const isLine  = _aptChartMode === 'line';
+  const stacked = _aptChartMode === 'stacked';
+
+  const datasets = CFG.airports.map((apt, i) => {
+    const color = AIRPORT_COLORS[i];
+    const data  = m12.map(m => rows.filter(r => r.airport === apt.code && r.year === m.y && r.month === m.m).length);
+    if (isLine) return {
+      label:           apt.code,
+      data,
+      borderColor:     color,
+      backgroundColor: color + '22',
+      fill:            false,
+      tension:         0.35,
+      pointRadius:     3,
+      pointHoverRadius:5,
+      borderWidth:     2,
+    };
+    return {
+      label:           apt.code,
+      data,
+      backgroundColor: color,
+      borderRadius:    stacked ? 0 : 4,
+      borderSkipped:   false,
+    };
+  });
+
   mkChart(canvasId, {
-    type: 'bar',
+    type: isLine ? 'line' : 'bar',
     data: { labels: m12.map(m => m.label), datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -1624,8 +1643,8 @@ function mkAptMonthlyChart(canvasId, rows) {
         tooltip: { titleFont:{size:11}, bodyFont:{size:11} },
       },
       scales: {
-        x: { stacked, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:10} } },
-        y: { stacked, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:10} }, beginAtZero:true },
+        x: { stacked: !isLine && stacked, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:10} } },
+        y: { stacked: !isLine && stacked, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:10} }, beginAtZero:true },
       },
     },
   });

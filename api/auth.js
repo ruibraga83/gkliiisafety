@@ -1,6 +1,6 @@
 // api/auth.js — Login: validate username + PIN → return signed JWT
 'use strict';
-const { signJWT, kvGet, cors } = require('./_lib');
+const { signJWT, kvGet, cors } = require('../lib');
 
 module.exports = async function handler(req, res) {
   cors(res);

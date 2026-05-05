@@ -1,6 +1,6 @@
 // api/setup.js — First-time setup: check readiness & create first admin user
 'use strict';
-const { signJWT, kvGet, kvSet, cors } = require('./_lib');
+const { signJWT, kvGet, kvSet, cors } = require('../lib');
 
 module.exports = async function handler(req, res) {
   cors(res);

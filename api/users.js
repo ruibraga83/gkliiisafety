@@ -1,6 +1,6 @@
 // api/users.js — User CRUD (list: any authenticated; write: admin only)
 'use strict';
-const { kvGet, kvSet, cors, requireAuth, requireAdmin } = require('./_lib');
+const { kvGet, kvSet, cors, requireAuth, requireAdmin } = require('../lib');
 
 module.exports = async function handler(req, res) {
   cors(res);

@@ -1,7 +1,7 @@
 // api/smartsheet.js — Smartsheet data proxy (Vercel Serverless, Node 18+)
 // Token is server-side via SMARTSHEET_TOKEN env var — never exposed to clients.
 'use strict';
-const { cors, requireAuth } = require('./_lib');
+const { cors, requireAuth } = require('../lib');
 
 const SS_BASE = 'https://api.smartsheet.com/2.0';
 

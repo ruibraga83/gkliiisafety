@@ -4,7 +4,7 @@
 // - Download works (direct <a href> — no popup-blocker issue)
 // - Presigned S3 URL is never exposed to the client
 'use strict';
-const { verifyJWT } = require('./_lib');
+const { verifyJWT } = require('../lib');
 
 const SS_BASE = 'https://api.smartsheet.com/2.0';
 

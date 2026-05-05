@@ -2225,9 +2225,21 @@ async function openPreview(event, attachmentId, encodedName, mime) {
   } catch(e) {
     console.error('[GL3] openPreview error:', e);
     if (win) win.close();
+
+    // Run diagnostic to see all Smartsheet endpoint responses
+    const cached2  = _urlCache.get(String(attachmentId));
+    const sheetId2 = cached2?.sheetId || null;
+    fetch(CFG.endpoint, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${STATE.jwt}` },
+      body:    JSON.stringify({ action: 'diagnose-attachment', attachmentId: String(attachmentId), sheetId: sheetId2, rowId: String(btn?.dataset?.rowid || '') }),
+    }).then(r => r.json()).then(d => {
+      console.warn('[GL3] ATTACHMENT DIAGNOSTIC — paste this in chat:', JSON.stringify(d, null, 2));
+    }).catch(() => {});
+
     content.innerHTML = `<div style="color:#f87171;padding:2rem;font-size:.85rem;line-height:1.6">
-      <strong>Preview failed</strong><br>${e.message}<br>
-      <span style="opacity:.7;font-size:.75rem">Open browser DevTools → Console for details.</span>
+      <strong>Preview failed:</strong> ${e.message}<br>
+      <span style="opacity:.7;font-size:.75rem">A diagnostic has been logged to DevTools → Console (look for ATTACHMENT DIAGNOSTIC).</span>
     </div>`;
   }
 }

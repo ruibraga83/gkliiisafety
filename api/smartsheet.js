@@ -65,16 +65,38 @@ module.exports = async function handler(req, res) {
       return res.json(data);
     }
 
-    // ── Single attachment URL (sheet-scoped when possible) ────────────────
+    // ── Single attachment URL (try all known endpoint variants) ─────────────
     if (action === 'attachment-url' && attachmentId) {
-      // Prefer sheet-scoped path; fall back to global if sheetId not provided
-      const path = sheetId
-        ? `/sheets/${sheetId}/attachments/${attachmentId}`
-        : `/attachments/${attachmentId}`;
-      const { ok, status, data } = await ssGet(path, h);
-      console.log(`[smartsheet] attachment-url ${path} → ${status}`);
-      if (!ok) return res.status(status).json({ error: data.message || 'Smartsheet error' });
-      return res.json(data);
+      const paths = [
+        sheetId ? `/sheets/${sheetId}/attachments/${attachmentId}` : null,
+        `/attachments/${attachmentId}`,
+      ].filter(Boolean);
+
+      for (const path of paths) {
+        const { ok, status, data } = await ssGet(path, h);
+        console.log(`[smartsheet] try ${path} → ${status} ${JSON.stringify(data).slice(0,120)}`);
+        if (ok && data.url) return res.json(data);
+        if (ok && !data.url) return res.status(502).json({ error: `Endpoint ${path} returned 200 but no url field. Keys: ${Object.keys(data).join(',')}` });
+      }
+      return res.status(404).json({ error: `All attachment endpoints returned 404 for id=${attachmentId} sheetId=${sheetId}` });
+    }
+
+    // ── Attachment diagnostic (tries every variant, returns raw results) ──
+    if (action === 'diagnose-attachment' && attachmentId) {
+      const variants = [
+        `/attachments/${attachmentId}`,
+        sheetId ? `/sheets/${sheetId}/attachments/${attachmentId}` : null,
+        (sheetId && rowId) ? `/sheets/${sheetId}/rows/${rowId}/attachments` : null,
+      ].filter(Boolean);
+
+      const results = {};
+      for (const p of variants) {
+        const r = await fetch(`${SS_BASE}${p}`, { headers: h });
+        const text = await r.text();
+        results[p] = { status: r.status, body: text.slice(0, 500) };
+      }
+      console.log('[smartsheet] diagnose:', JSON.stringify(results));
+      return res.json(results);
     }
 
     // ── Sheet fetch ───────────────────────────────────────────────────────

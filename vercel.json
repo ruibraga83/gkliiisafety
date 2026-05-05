@@ -3,11 +3,11 @@
   "outputDirectory": ".",
   "buildCommand": "",
   "functions": {
-    "api/smartsheet.js":       { "runtime": "nodejs18.x", "memory": 256, "maxDuration": 15 },
-    "api/auth.js":             { "runtime": "nodejs18.x", "memory": 128, "maxDuration": 10 },
-    "api/setup.js":            { "runtime": "nodejs18.x", "memory": 128, "maxDuration": 10 },
-    "api/users.js":            { "runtime": "nodejs18.x", "memory": 128, "maxDuration": 10 },
-    "api/attachment-proxy.js": { "runtime": "nodejs18.x", "memory": 512, "maxDuration": 30 }
+    "api/smartsheet.js":       { "memory": 256, "maxDuration": 15 },
+    "api/auth.js":             { "memory": 128, "maxDuration": 10 },
+    "api/setup.js":            { "memory": 128, "maxDuration": 10 },
+    "api/users.js":            { "memory": 128, "maxDuration": 10 },
+    "api/attachment-proxy.js": { "memory": 512, "maxDuration": 30 }
   },
   "rewrites": [
     { "source": "/api/smartsheet",       "destination": "/api/smartsheet" },

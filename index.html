@@ -2080,6 +2080,7 @@ async function showAttachments(btn) {
   document.getElementById('attachOverlay').style.display = 'block';
 
   const attachments = await fetchAttachments(airportCode, rowId);
+  console.log('[GL3] attachments raw:', JSON.stringify(attachments));
 
   if (!attachments.length) {
     body.innerHTML = '<div class="attach-empty"><i class="fas fa-paperclip"></i>No attachments found for this incident.</div>';
@@ -2135,9 +2136,10 @@ async function _getPresignedUrl(attachmentId) {
     body:    JSON.stringify({ action: 'attachment-url', attachmentId: String(attachmentId) }),
   });
   const data = await res.json();
-  console.log('[GL3] attachment-url response', res.status, JSON.stringify(data).slice(0,200));
-  if (!res.ok)  throw new Error(data.error || `Smartsheet returned HTTP ${res.status}`);
-  if (!data.url) throw new Error('Smartsheet response has no url field — check Smartsheet API token permissions');
+  console.log('[GL3] attachment-url response', res.status, JSON.stringify(data).slice(0, 300));
+  if (!res.ok)   throw new Error(data.error || data.message || `HTTP ${res.status}`);
+  if (!data.url) throw new Error(`No url field in response. Keys: ${Object.keys(data).join(', ')}`);
+  console.log('[GL3] presigned URL (first 80 chars):', data.url.slice(0, 80));
   return data.url;
 }
 
@@ -2191,7 +2193,10 @@ async function openPreview(event, attachmentId, encodedName, mime) {
       const img = document.createElement('img');
       img.alt   = name;
       img.style.cssText = 'max-width:100%;max-height:90vh;border-radius:.5rem;object-fit:contain';
-      img.onerror = () => { content.innerHTML = `<div style="color:#f87171;padding:2rem;font-size:.85rem">Failed to load image — the link may have expired. Close and reopen the preview to retry.</div>`; };
+      img.onerror = () => {
+        console.error('[GL3] image load failed — src was:', img.src.slice(0, 100));
+        content.innerHTML = `<div style="color:#f87171;padding:2rem;font-size:.85rem">Failed to load image — S3 rejected the URL. Check console for details.</div>`;
+      };
       img.src = url; // set AFTER onerror to avoid race condition
       content.appendChild(img);
     } else if (mime.startsWith('video/')) {

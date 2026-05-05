@@ -13,12 +13,20 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // Parse query string manually as a fallback (req.query may be empty on some runtimes)
+  const rawUrl = req.url || '';
+  const qs     = rawUrl.includes('?') ? new URLSearchParams(rawUrl.split('?')[1]) : new URLSearchParams();
+  const q      = k => (req.query && req.query[k]) || qs.get(k) || '';
+
   // Accept JWT from query param (needed for img src / a href) or Authorization header
-  const jwt     = req.query.jwt || (req.headers.authorization || '').replace('Bearer ', '').trim();
+  const jwt     = q('jwt') || (req.headers.authorization || '').replace('Bearer ', '').trim();
   const session = verifyJWT(jwt);
   if (!session) return res.status(401).send('Unauthorized');
 
-  const { id, filename, download } = req.query;
+  const id       = q('id');
+  const filename = q('filename') || '';
+  const download = q('download');
+
   if (!id) return res.status(400).send('Missing attachment id');
 
   const token = process.env.SMARTSHEET_TOKEN;

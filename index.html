@@ -505,6 +505,9 @@
       background:var(--primary); color:#fff; padding:.12rem .45rem; border-radius:.3rem;
       font-size:.68rem; font-weight:700; font-family:'JetBrains Mono',monospace; letter-spacing:.02em;
     }
+    .dept-foh { background:#eef2ff; color:#4f46e5; padding:.12rem .45rem; border-radius:.3rem; font-size:.68rem; font-weight:600; }
+    .dept-boh { background:#fef3c7; color:#d97706; padding:.12rem .45rem; border-radius:.3rem; font-size:.68rem; font-weight:600; }
+    .dept-other{ background:#f3f4f6; color:#6b7280; padding:.12rem .45rem; border-radius:.3rem; font-size:.68rem; font-weight:600; }
     .reg-tag {
       background:var(--sb-bg); color:#c7d2fe; padding:.12rem .45rem; border-radius:.3rem;
       font-size:.68rem; font-weight:600; font-family:'JetBrains Mono',monospace; letter-spacing:.04em;
@@ -834,6 +837,7 @@
           <select id="netMonth" onchange="applyFilters('network')"><option value="">All Months</option></select>
           <select id="netCat"   onchange="applyFilters('network')"><option value="">All Categories</option></select>
           <select id="netRisk"  onchange="applyFilters('network')"><option value="">All Risk Levels</option></select>
+          <select id="netDept"  onchange="applyFilters('network')"><option value="">FOH &amp; BOH</option></select>
           <select id="netApt"   onchange="applyFilters('network')"><option value="">All Airports</option></select>
         </div>
         <div class="kpi-grid">
@@ -867,6 +871,18 @@
             <div class="kpi-value" id="net-apts">—</div>
             <div class="kpi-sub">With incidents</div>
           </div>
+          <div class="kpi-card" style="--dept-c:#4f46e5">
+            <div class="kpi-icon" style="background:#eef2ff;color:#4f46e5"><i class="fas fa-door-open"></i></div>
+            <div class="kpi-label">FOH</div>
+            <div class="kpi-value" id="net-foh" style="color:#4f46e5">—</div>
+            <div class="kpi-sub">Front of House</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-warehouse"></i></div>
+            <div class="kpi-label">BOH</div>
+            <div class="kpi-value" id="net-boh" style="color:#d97706">—</div>
+            <div class="kpi-sub">Back of House</div>
+          </div>
         </div>
         <div class="chart-grid">
           <div class="chart-card">
@@ -884,6 +900,10 @@
           <div class="chart-card">
             <div class="chart-card-head"><h3>Top Categories</h3></div>
             <div class="chart-wrap"><canvas id="ch-net-cat"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>FOH vs BOH by Airport</h3></div>
+            <div class="chart-wrap"><canvas id="ch-net-dept"></canvas></div>
           </div>
         </div>
 
@@ -910,7 +930,7 @@
               <thead><tr>
                 <th>Inc #</th><th>Airport</th>
                 <th id="th-date-net" class="th-sortable th-active" onclick="toggleDateSort('net')">Date <i class="sort-icon fas fa-arrow-down"></i></th>
-                <th>A/C Reg</th><th>Dep</th><th>Arr</th>
+                <th>A/C Reg</th><th>Dep</th><th>Arr</th><th>Dept</th>
                 <th>Category</th><th>Sub-Category</th>
                 <th>Risk</th><th>Status</th><th>Synopsis</th>
                 <th style="width:40px;text-align:center" title="Attachments"><i class="fas fa-paperclip"></i></th>
@@ -929,6 +949,7 @@
           <select id="dashMonth" onchange="applyFilters('dashboard')"><option value="">All Months</option></select>
           <select id="dashCat"   onchange="applyFilters('dashboard')"><option value="">All Categories</option></select>
           <select id="dashRisk"  onchange="applyFilters('dashboard')"><option value="">All Risk Levels</option></select>
+          <select id="dashDept"  onchange="applyFilters('dashboard')"><option value="">FOH &amp; BOH</option></select>
         </div>
         <div class="kpi-grid">
           <div class="kpi-card">
@@ -967,6 +988,18 @@
             <div class="kpi-value" id="dash-crit">—</div>
             <div class="kpi-sub">Score 100+</div>
           </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:#eef2ff;color:#4f46e5"><i class="fas fa-door-open"></i></div>
+            <div class="kpi-label">FOH</div>
+            <div class="kpi-value" id="dash-foh" style="color:#4f46e5">—</div>
+            <div class="kpi-sub">Front of House</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-warehouse"></i></div>
+            <div class="kpi-label">BOH</div>
+            <div class="kpi-value" id="dash-boh" style="color:#d97706">—</div>
+            <div class="kpi-sub">Back of House</div>
+          </div>
         </div>
         <div class="chart-grid">
           <div class="chart-card">
@@ -984,6 +1017,17 @@
           <div class="chart-card">
             <div class="chart-card-head"><h3>Status</h3></div>
             <div class="chart-wrap"><canvas id="ch-dash-status"></canvas></div>
+          </div>
+        </div>
+        <!-- FOH vs BOH comparison -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>FOH vs BOH — by Airport</h3></div>
+            <div class="chart-wrap"><canvas id="ch-dash-dept-apt"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-head"><h3>FOH vs BOH — Monthly Trend</h3></div>
+            <div class="chart-wrap"><canvas id="ch-dash-dept-monthly"></canvas></div>
           </div>
         </div>
         <div class="table-card">
@@ -1012,6 +1056,7 @@
           <select id="trendApt"  onchange="applyFilters('trends')"><option value="">All Airports</option></select>
           <select id="trendYear" onchange="applyFilters('trends')"><option value="">All Years</option></select>
           <select id="trendCat"  onchange="applyFilters('trends')"><option value="">All Categories</option></select>
+          <select id="trendDept" onchange="applyFilters('trends')"><option value="">FOH &amp; BOH</option></select>
         </div>
         <div class="chart-grid">
           <div class="chart-card">
@@ -1074,6 +1119,7 @@
           <select id="recSubCat" onchange="applyFilters('records')"><option value="">All Sub-Categories</option></select>
           <select id="recRisk"   onchange="applyFilters('records')"><option value="">All Risk Levels</option></select>
           <select id="recStatus" onchange="applyFilters('records')"><option value="">All Statuses</option></select>
+          <select id="recDept"   onchange="applyFilters('records')"><option value="">FOH &amp; BOH</option></select>
           <input  type="text" id="recSearch" placeholder="Search by incident #, category, A/C reg, synopsis…" oninput="applyFilters('records')"/>
         </div>
         <div class="table-card">
@@ -1269,6 +1315,14 @@ function normRisk(raw) {
   return 'unknown';
 }
 
+function normDept(raw) {
+  if (!raw) return '—';
+  const s = String(raw).trim().toUpperCase();
+  if (s === 'FOH' || s.startsWith('FRONT')) return 'FOH';
+  if (s === 'BOH' || s.startsWith('BACK'))  return 'BOH';
+  return String(raw).trim();
+}
+
 function normStatus(raw) {
   if (raw === null || raw === undefined || String(raw).trim() === '') return 'open';
   const s = String(raw).toLowerCase().trim();
@@ -1304,6 +1358,13 @@ function riskBadge(r, raw) {
   };
   const [cls, lbl] = map[r] || map.unknown;
   return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function deptBadge(d) {
+  if (!d || d === '—') return '<span style="color:var(--text-muted)">—</span>';
+  if (d === 'FOH') return '<span class="dept-foh">FOH</span>';
+  if (d === 'BOH') return '<span class="dept-boh">BOH</span>';
+  return `<span class="dept-other">${d}</span>`;
 }
 
 function statusBadge(s) {
@@ -1394,6 +1455,7 @@ function parseRows(sheet, airport) {
     sev:     findCol(['Severity','Priority','Level','Severity Level']),
     status:  findCol(['Closed','Status','State','Condition','Current Status']),
     synopsis:findCol(['Synopsis','Ground Event Summary','Summary','Description','Event Description','Details','Notes','Comments','Event Summary']),
+    dept:    findCol(['Department','Dept','Area','FOH/BOH','FOH / BOH','Department/Area','Zone','Team','Location Type']),
   };
 
   function getVal(row, colId) {
@@ -1440,6 +1502,7 @@ function parseRows(sheet, airport) {
       riskRaw: rawRisk,
       status:  normStatus(rawStatus),
       synopsis:       synopsis || '—',
+      dept:           normDept(getVal(row, cid.dept)),
       airport:        airport.code,
       aptName:        airport.name,
       hasAttachments: Array.isArray(row.attachments) && row.attachments.length > 0,
@@ -1570,6 +1633,8 @@ function populateFilters() {
   ['netApt','dashApt','trendApt','catApt','recApt'].forEach(id => fillSelect(id, apts, aptLbls));
   fillSelect('recSubCat', subCats);
   fillSelect('recStatus', stats, stLbls);
+  const depts = unique(rows.map(r => r.dept).filter(d => d !== '—'));
+  ['netDept','dashDept','trendDept','recDept'].forEach(id => fillSelect(id, depts));
   enforceAirportSelects();
 }
 
@@ -1587,6 +1652,7 @@ function getFiltered(page) {
     if (fv('netCat'))   r = r.filter(x => x.cat === fv('netCat'));
     if (fv('netRisk'))  r = r.filter(x => x.risk === fv('netRisk'));
     if (!isAirportUser && fv('netApt')) r = r.filter(x => x.airport === fv('netApt'));
+    if (fv('netDept')) r = r.filter(x => x.dept === fv('netDept'));
   } else {
     // All other pages: airport users are restricted to their airport
     if (isAirportUser) r = r.filter(x => x.airport === STATE.userAirport);
@@ -1597,10 +1663,12 @@ function getFiltered(page) {
       if (fv('dashMonth')) r = r.filter(x => String(x.month) === fv('dashMonth'));
       if (fv('dashCat'))   r = r.filter(x => x.cat === fv('dashCat'));
       if (fv('dashRisk'))  r = r.filter(x => x.risk === fv('dashRisk'));
+      if (fv('dashDept'))  r = r.filter(x => x.dept === fv('dashDept'));
     } else if (page === 'trends') {
       if (!isAirportUser && fv('trendApt'))  r = r.filter(x => x.airport === fv('trendApt'));
       if (fv('trendYear')) r = r.filter(x => String(x.year) === fv('trendYear'));
       if (fv('trendCat'))  r = r.filter(x => x.cat === fv('trendCat'));
+      if (fv('trendDept')) r = r.filter(x => x.dept === fv('trendDept'));
     } else if (page === 'categories') {
       if (!isAirportUser && fv('catApt'))  r = r.filter(x => x.airport === fv('catApt'));
       if (fv('catYear')) r = r.filter(x => String(x.year) === fv('catYear'));
@@ -1612,6 +1680,7 @@ function getFiltered(page) {
       if (fv('recSubCat')) r = r.filter(x => x.subCat === fv('recSubCat'));
       if (fv('recRisk'))   r = r.filter(x => x.risk === fv('recRisk'));
       if (fv('recStatus')) r = r.filter(x => x.status === fv('recStatus'));
+      if (fv('recDept'))   r = r.filter(x => x.dept === fv('recDept'));
       const q = fv('recSearch').toLowerCase();
       if (q) r = r.filter(x =>
         x.synopsis.toLowerCase().includes(q) ||
@@ -1760,7 +1829,7 @@ function renderTbl(tbodyId, countId, rows, tableKey) {
   if (tableKey) applySortToHeader(tableKey);
   if (ct) ct.textContent = `${sorted.length} incident${sorted.length !== 1 ? 's' : ''}`;
   if (!sorted.length) {
-    tb.innerHTML = '<tr class="empty-row"><td colspan="12">No incidents match the selected filters.</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="13">No incidents match the selected filters.</td></tr>';
     return;
   }
   tb.innerHTML = sorted.map(r => `
@@ -1771,6 +1840,7 @@ function renderTbl(tbodyId, countId, rows, tableKey) {
       <td><span class="reg-tag">${r.acReg}</span></td>
       <td><span class="airport-code">${r.depApt}</span></td>
       <td><span class="airport-code">${r.arrApt}</span></td>
+      <td>${deptBadge(r.dept)}</td>
       <td>${r.cat}</td>
       <td style="color:var(--text-sec)">${r.subCat}</td>
       <td>${riskBadge(r.risk, r.riskRaw)}</td>
@@ -1793,6 +1863,8 @@ function renderNetwork(rows) {
   setText('net-high',  rows.filter(r => r.risk === 'high').length);
   setText('net-crit',  rows.filter(r => r.risk === 'critical').length);
   setText('net-apts',  unique(rows.map(r => r.airport)).length);
+  setText('net-foh',   rows.filter(r => r.dept === 'FOH').length);
+  setText('net-boh',   rows.filter(r => r.dept === 'BOH').length);
 
   const byApt = countBy(rows, 'airport');
   mkChart('ch-net-apt', {type:'bar', data:{labels:Object.keys(byApt), datasets:[{label:'Incidents', data:Object.values(byApt), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({plugins:{legend:{display:false}}})});
@@ -1808,6 +1880,15 @@ function renderNetwork(rows) {
 
   mkAptMonthlyChart('ch-net-monthly-apt', rows);
 
+  // FOH vs BOH by Airport
+  const netApts = CFG.airports.map(a => a.code);
+  mkChart('ch-net-dept', {type:'bar', data:{labels:netApts,
+    datasets:[
+      {label:'FOH', data:netApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='FOH').length), backgroundColor:'#6366f1', borderRadius:4},
+      {label:'BOH', data:netApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='BOH').length), backgroundColor:'#f59e0b', borderRadius:4},
+    ]},
+    options:barOpts({plugins:{legend:{position:'bottom', labels:{font:{size:11},boxWidth:12}}}, scales:{x:{grid:{display:false}}}})});
+
   // Airport users see full network charts/KPIs, but only their airport in the table
   const tableRows = (STATE.role === 'airport' && STATE.userAirport)
     ? rows.filter(r => r.airport === STATE.userAirport)
@@ -1822,6 +1903,8 @@ function renderDashboard(rows) {
   setText('dash-closed', rows.filter(r => r.status === 'closed').length);
   setText('dash-high',   rows.filter(r => r.risk === 'high').length);
   setText('dash-crit',   rows.filter(r => r.risk === 'critical').length);
+  setText('dash-foh',    rows.filter(r => r.dept === 'FOH').length);
+  setText('dash-boh',    rows.filter(r => r.dept === 'BOH').length);
 
   const m12 = last12();
   mkChart('ch-dash-monthly', {type:'line', data:{labels:m12.map(m => m.label), datasets:[{label:'Incidents', data:m12.map(m => rows.filter(r => r.year===m.y&&r.month===m.m).length), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.08)', fill:true, tension:.4, pointBackgroundColor:'#6366f1', pointRadius:3}]}, options:barOpts({plugins:{legend:{display:false}}})});
@@ -1834,6 +1917,24 @@ function renderDashboard(rows) {
 
   const sd = countBy(rows, 'status');
   mkChart('ch-dash-status', {type:'doughnut', data:{labels:['Open','In Progress','Closed','Unknown'], datasets:[{data:STAT_ORDER.map(s => sd[s]||0), backgroundColor:STAT_ORDER.map(s => STAT_COLORS[s]), borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:11}, boxWidth:12}}}}});
+
+  // FOH vs BOH by Airport (grouped bar)
+  const dashApts = unique(rows.map(r => r.airport));
+  mkChart('ch-dash-dept-apt', {type:'bar', data:{labels:dashApts,
+    datasets:[
+      {label:'FOH', data:dashApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='FOH').length), backgroundColor:'#6366f1', borderRadius:4},
+      {label:'BOH', data:dashApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='BOH').length), backgroundColor:'#f59e0b', borderRadius:4},
+    ]},
+    options:barOpts({plugins:{legend:{position:'bottom', labels:{font:{size:11},boxWidth:12}}}, scales:{x:{grid:{display:false}}}})});
+
+  // FOH vs BOH monthly trend (grouped bar)
+  const dm12 = last12();
+  mkChart('ch-dash-dept-monthly', {type:'bar', data:{labels:dm12.map(m=>m.label),
+    datasets:[
+      {label:'FOH', data:dm12.map(m=>rows.filter(r=>r.year===m.y&&r.month===m.m&&r.dept==='FOH').length), backgroundColor:'#6366f1', borderRadius:4},
+      {label:'BOH', data:dm12.map(m=>rows.filter(r=>r.year===m.y&&r.month===m.m&&r.dept==='BOH').length), backgroundColor:'#f59e0b', borderRadius:4},
+    ]},
+    options:barOpts({plugins:{legend:{position:'bottom', labels:{font:{size:11},boxWidth:12}}}, scales:{x:{grid:{display:false}}}})});
 
   renderTbl('dash-tbody', 'dash-tbl-count', rows, 'dash');
 }

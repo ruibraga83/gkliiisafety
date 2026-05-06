@@ -506,7 +506,7 @@
       font-size:.68rem; font-weight:700; font-family:'JetBrains Mono',monospace; letter-spacing:.02em;
     }
     .dept-foh { background:#eef2ff; color:#4f46e5; padding:.12rem .45rem; border-radius:.3rem; font-size:.68rem; font-weight:600; }
-    .dept-boh { background:#fef3c7; color:#d97706; padding:.12rem .45rem; border-radius:.3rem; font-size:.68rem; font-weight:600; }
+    .dept-ramp { background:#fef3c7; color:#d97706; padding:.12rem .45rem; border-radius:.3rem; font-size:.68rem; font-weight:600; }
     .dept-other{ background:#f3f4f6; color:#6b7280; padding:.12rem .45rem; border-radius:.3rem; font-size:.68rem; font-weight:600; }
     .reg-tag {
       background:var(--sb-bg); color:#c7d2fe; padding:.12rem .45rem; border-radius:.3rem;
@@ -837,7 +837,7 @@
           <select id="netMonth" onchange="applyFilters('network')"><option value="">All Months</option></select>
           <select id="netCat"   onchange="applyFilters('network')"><option value="">All Categories</option></select>
           <select id="netRisk"  onchange="applyFilters('network')"><option value="">All Risk Levels</option></select>
-          <select id="netDept"  onchange="applyFilters('network')"><option value="">FOH &amp; BOH</option></select>
+          <select id="netDept"  onchange="applyFilters('network')"><option value="">FOH &amp; RAMP</option></select>
           <select id="netApt"   onchange="applyFilters('network')"><option value="">All Airports</option></select>
         </div>
         <div class="kpi-grid">
@@ -881,7 +881,7 @@
             <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-warehouse"></i></div>
             <div class="kpi-label">BOH</div>
             <div class="kpi-value" id="net-boh" style="color:#d97706">—</div>
-            <div class="kpi-sub">Back of House</div>
+            <div class="kpi-sub">Ramp</div>
           </div>
         </div>
         <div class="chart-grid">
@@ -902,7 +902,7 @@
             <div class="chart-wrap"><canvas id="ch-net-cat"></canvas></div>
           </div>
           <div class="chart-card">
-            <div class="chart-card-head"><h3>FOH vs BOH by Airport</h3></div>
+            <div class="chart-card-head"><h3>FOH vs RAMP by Airport</h3></div>
             <div class="chart-wrap"><canvas id="ch-net-dept"></canvas></div>
           </div>
         </div>
@@ -949,7 +949,7 @@
           <select id="dashMonth" onchange="applyFilters('dashboard')"><option value="">All Months</option></select>
           <select id="dashCat"   onchange="applyFilters('dashboard')"><option value="">All Categories</option></select>
           <select id="dashRisk"  onchange="applyFilters('dashboard')"><option value="">All Risk Levels</option></select>
-          <select id="dashDept"  onchange="applyFilters('dashboard')"><option value="">FOH &amp; BOH</option></select>
+          <select id="dashDept"  onchange="applyFilters('dashboard')"><option value="">FOH &amp; RAMP</option></select>
         </div>
         <div class="kpi-grid">
           <div class="kpi-card">
@@ -998,7 +998,7 @@
             <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-warehouse"></i></div>
             <div class="kpi-label">BOH</div>
             <div class="kpi-value" id="dash-boh" style="color:#d97706">—</div>
-            <div class="kpi-sub">Back of House</div>
+            <div class="kpi-sub">Ramp</div>
           </div>
         </div>
         <div class="chart-grid">
@@ -1019,14 +1019,14 @@
             <div class="chart-wrap"><canvas id="ch-dash-status"></canvas></div>
           </div>
         </div>
-        <!-- FOH vs BOH comparison -->
+        <!-- FOH vs RAMP comparison -->
         <div class="chart-grid">
           <div class="chart-card">
-            <div class="chart-card-head"><h3>FOH vs BOH — by Airport</h3></div>
+            <div class="chart-card-head"><h3>FOH vs RAMP — by Airport</h3></div>
             <div class="chart-wrap"><canvas id="ch-dash-dept-apt"></canvas></div>
           </div>
           <div class="chart-card">
-            <div class="chart-card-head"><h3>FOH vs BOH — Monthly Trend</h3></div>
+            <div class="chart-card-head"><h3>FOH vs RAMP — Monthly Trend</h3></div>
             <div class="chart-wrap"><canvas id="ch-dash-dept-monthly"></canvas></div>
           </div>
         </div>
@@ -1056,7 +1056,7 @@
           <select id="trendApt"  onchange="applyFilters('trends')"><option value="">All Airports</option></select>
           <select id="trendYear" onchange="applyFilters('trends')"><option value="">All Years</option></select>
           <select id="trendCat"  onchange="applyFilters('trends')"><option value="">All Categories</option></select>
-          <select id="trendDept" onchange="applyFilters('trends')"><option value="">FOH &amp; BOH</option></select>
+          <select id="trendDept" onchange="applyFilters('trends')"><option value="">FOH &amp; RAMP</option></select>
         </div>
         <div class="chart-grid">
           <div class="chart-card">
@@ -1119,7 +1119,7 @@
           <select id="recSubCat" onchange="applyFilters('records')"><option value="">All Sub-Categories</option></select>
           <select id="recRisk"   onchange="applyFilters('records')"><option value="">All Risk Levels</option></select>
           <select id="recStatus" onchange="applyFilters('records')"><option value="">All Statuses</option></select>
-          <select id="recDept"   onchange="applyFilters('records')"><option value="">FOH &amp; BOH</option></select>
+          <select id="recDept"   onchange="applyFilters('records')"><option value="">FOH &amp; RAMP</option></select>
           <input  type="text" id="recSearch" placeholder="Search by incident #, category, A/C reg, synopsis…" oninput="applyFilters('records')"/>
         </div>
         <div class="table-card">
@@ -1318,8 +1318,8 @@ function normRisk(raw) {
 function normDept(raw) {
   if (!raw) return '—';
   const s = String(raw).trim().toUpperCase();
-  if (s === 'FOH' || s.startsWith('FRONT')) return 'FOH';
-  if (s === 'BOH' || s.startsWith('BACK'))  return 'BOH';
+  if (s === 'FOH'  || s.startsWith('FRONT')) return 'FOH';
+  if (s === 'RAMP' || s.startsWith('RAMP'))  return 'RAMP';
   return String(raw).trim();
 }
 
@@ -1363,7 +1363,7 @@ function riskBadge(r, raw) {
 function deptBadge(d) {
   if (!d || d === '—') return '<span style="color:var(--text-muted)">—</span>';
   if (d === 'FOH') return '<span class="dept-foh">FOH</span>';
-  if (d === 'BOH') return '<span class="dept-boh">BOH</span>';
+  if (d === 'RAMP') return '<span class="dept-ramp">BOH</span>';
   return `<span class="dept-other">${d}</span>`;
 }
 
@@ -1864,7 +1864,7 @@ function renderNetwork(rows) {
   setText('net-crit',  rows.filter(r => r.risk === 'critical').length);
   setText('net-apts',  unique(rows.map(r => r.airport)).length);
   setText('net-foh',   rows.filter(r => r.dept === 'FOH').length);
-  setText('net-boh',   rows.filter(r => r.dept === 'BOH').length);
+  setText('net-boh',   rows.filter(r => r.dept === 'RAMP').length);
 
   const byApt = countBy(rows, 'airport');
   mkChart('ch-net-apt', {type:'bar', data:{labels:Object.keys(byApt), datasets:[{label:'Incidents', data:Object.values(byApt), backgroundColor:PALETTE, borderRadius:4}]}, options:barOpts({plugins:{legend:{display:false}}})});
@@ -1880,12 +1880,12 @@ function renderNetwork(rows) {
 
   mkAptMonthlyChart('ch-net-monthly-apt', rows);
 
-  // FOH vs BOH by Airport
+  // FOH vs RAMP by Airport
   const netApts = CFG.airports.map(a => a.code);
   mkChart('ch-net-dept', {type:'bar', data:{labels:netApts,
     datasets:[
       {label:'FOH', data:netApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='FOH').length), backgroundColor:'#6366f1', borderRadius:4},
-      {label:'BOH', data:netApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='BOH').length), backgroundColor:'#f59e0b', borderRadius:4},
+      {label:'RAMP', data:netApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='RAMP').length), backgroundColor:'#f59e0b', borderRadius:4},
     ]},
     options:barOpts({plugins:{legend:{position:'bottom', labels:{font:{size:11},boxWidth:12}}}, scales:{x:{grid:{display:false}}}})});
 
@@ -1904,7 +1904,7 @@ function renderDashboard(rows) {
   setText('dash-high',   rows.filter(r => r.risk === 'high').length);
   setText('dash-crit',   rows.filter(r => r.risk === 'critical').length);
   setText('dash-foh',    rows.filter(r => r.dept === 'FOH').length);
-  setText('dash-boh',    rows.filter(r => r.dept === 'BOH').length);
+  setText('dash-boh',    rows.filter(r => r.dept === 'RAMP').length);
 
   const m12 = last12();
   mkChart('ch-dash-monthly', {type:'line', data:{labels:m12.map(m => m.label), datasets:[{label:'Incidents', data:m12.map(m => rows.filter(r => r.year===m.y&&r.month===m.m).length), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.08)', fill:true, tension:.4, pointBackgroundColor:'#6366f1', pointRadius:3}]}, options:barOpts({plugins:{legend:{display:false}}})});
@@ -1918,21 +1918,21 @@ function renderDashboard(rows) {
   const sd = countBy(rows, 'status');
   mkChart('ch-dash-status', {type:'doughnut', data:{labels:['Open','In Progress','Closed','Unknown'], datasets:[{data:STAT_ORDER.map(s => sd[s]||0), backgroundColor:STAT_ORDER.map(s => STAT_COLORS[s]), borderWidth:2, borderColor:'#fff'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:11}, boxWidth:12}}}}});
 
-  // FOH vs BOH by Airport (grouped bar)
+  // FOH vs RAMP by Airport (grouped bar)
   const dashApts = unique(rows.map(r => r.airport));
   mkChart('ch-dash-dept-apt', {type:'bar', data:{labels:dashApts,
     datasets:[
       {label:'FOH', data:dashApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='FOH').length), backgroundColor:'#6366f1', borderRadius:4},
-      {label:'BOH', data:dashApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='BOH').length), backgroundColor:'#f59e0b', borderRadius:4},
+      {label:'RAMP', data:dashApts.map(a=>rows.filter(r=>r.airport===a&&r.dept==='RAMP').length), backgroundColor:'#f59e0b', borderRadius:4},
     ]},
     options:barOpts({plugins:{legend:{position:'bottom', labels:{font:{size:11},boxWidth:12}}}, scales:{x:{grid:{display:false}}}})});
 
-  // FOH vs BOH monthly trend (grouped bar)
+  // FOH vs RAMP monthly trend (grouped bar)
   const dm12 = last12();
   mkChart('ch-dash-dept-monthly', {type:'bar', data:{labels:dm12.map(m=>m.label),
     datasets:[
       {label:'FOH', data:dm12.map(m=>rows.filter(r=>r.year===m.y&&r.month===m.m&&r.dept==='FOH').length), backgroundColor:'#6366f1', borderRadius:4},
-      {label:'BOH', data:dm12.map(m=>rows.filter(r=>r.year===m.y&&r.month===m.m&&r.dept==='BOH').length), backgroundColor:'#f59e0b', borderRadius:4},
+      {label:'RAMP', data:dm12.map(m=>rows.filter(r=>r.year===m.y&&r.month===m.m&&r.dept==='RAMP').length), backgroundColor:'#f59e0b', borderRadius:4},
     ]},
     options:barOpts({plugins:{legend:{position:'bottom', labels:{font:{size:11},boxWidth:12}}}, scales:{x:{grid:{display:false}}}})});
 

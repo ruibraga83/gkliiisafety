@@ -29,11 +29,30 @@ function verifyJWT(token) {
   } catch (e) { return null; }
 }
 
-// ── Vercel KV (Upstash REST, no package needed) ───────────────────────────────
+// ── Storage ───────────────────────────────────────────────────────────────────
+// Two backends, chosen at runtime:
+//   • REDIS_URL set        → local/self-hosted Redis (uses the `redis` package)
+//   • KV_REST_API_URL set  → Upstash/Vercel KV REST (no package needed)
+// Keys are namespaced under "gl3:" so this can share a Redis instance safely.
+function nsKey(key) { return key.startsWith('gl3:') ? key : `gl3:${key}`; }
+
+// -- Local Redis (lazy singleton) --
+let _redis = null;
+function getRedis() {
+  if (!process.env.REDIS_URL) return null;
+  if (_redis) return _redis;
+  const { createClient } = require('redis');
+  _redis = createClient({ url: process.env.REDIS_URL });
+  _redis.on('error', (e) => console.error('[redis]', e.message));
+  _redis._ready = _redis.connect(); // connect once; awaited before each op
+  return _redis;
+}
+
+// -- Upstash REST (fallback) --
 async function kvOp(commands) {
   const url   = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) throw new Error('KV_REST_API_URL / KV_REST_API_TOKEN not set');
+  if (!url || !token) throw new Error('No storage configured: set REDIS_URL or KV_REST_API_URL.');
   const res = await fetch(`${url}/pipeline`, {
     method:  'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -44,12 +63,24 @@ async function kvOp(commands) {
 }
 
 async function kvGet(key) {
+  const r = getRedis();
+  if (r) {
+    await r._ready;
+    const val = await r.get(nsKey(key));
+    return val ? JSON.parse(val) : null;
+  }
   const results = await kvOp([['GET', key]]);
   const val = results?.[0]?.result;
   return val ? JSON.parse(val) : null;
 }
 
 async function kvSet(key, value) {
+  const r = getRedis();
+  if (r) {
+    await r._ready;
+    await r.set(nsKey(key), JSON.stringify(value));
+    return;
+  }
   await kvOp([['SET', key, JSON.stringify(value)]]);
 }
 

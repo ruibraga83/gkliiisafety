@@ -1217,7 +1217,7 @@
             </div>
             <p style="font-size:.75rem;color:var(--text-muted);margin-top:.6rem;line-height:1.6">
               <i class="fas fa-info-circle"></i>
-              The API token is stored securely as a server environment variable (<code>SMARTSHEET_TOKEN</code>). To change it, update the variable in <strong>Vercel → Project → Settings → Environment Variables</strong> and redeploy.
+              The API token is stored securely as a server environment variable (<code>SMARTSHEET_TOKEN</code>). To change it, edit <code>SMARTSHEET_TOKEN</code> in <strong>/opt/safety/.env</strong> on the server, then run <code>docker compose up -d --build</code> to restart.
             </p>
           </div>
         </div>

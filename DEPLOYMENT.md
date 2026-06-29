@@ -1,158 +1,122 @@
-# Self-hosting on Hetzner — step by step
+# Deploying on the GroundLink server (Caddy + Docker)
 
 Goal: serve the Safety Dashboard at
-**`https://intranet.groundlinkhandling.pt/dashboards/safety/`** from your own
-Hetzner server. Architecture:
+**`https://intranet.groundlinkhandling.pt/dashboards/safety/`** on the existing
+server, alongside the current intranet, without touching the running stack.
+
+Live architecture (discovered from `docker ps` / `docker inspect`):
 
 ```
-Browser ──HTTPS──► Nginx (intranet.groundlinkhandling.pt)
-                     ├─ /dashboards/safety/        ─┐
-                     └─ /dashboards/safety/api/*   ─┴─► Node/Express @ 127.0.0.1:3000
-                                                          (server.js → api/*.js handlers)
-                                                          └─► Smartsheet API + Upstash KV
+Browser ──HTTPS──► Caddy (caddy-caddy-1, network: proxy, /opt/caddy/Caddyfile)
+   intranet.groundlinkhandling.pt
+     ├─ /dashboards/safety/*  ──► safety:3000   (this app — to be added)
+     ├─ /api/*                ──► backend:4000  (existing)
+     └─ (everything else)     ──► frontend:80   (existing intranet)
 ```
 
-- `index.html` is base-path aware (a `<head>` script sets `<base href>`), so the
-  same code works at `/dashboards/safety/`.
-- `server.js` runs the existing `api/*.js` handlers as one process.
-- Nginx terminates TLS and reverse-proxies the path to the Node service.
+- The app runs as its own container `gl_safety` on the shared **`proxy`** network.
+- It stores its small user list in a file on the `safety_data` volume — **no Redis
+  or external service needed**.
+- `index.html` is base-path aware, so the same image works under `/dashboards/safety/`.
 
-Everything below is run **on the Hetzner server** over SSH unless noted.
+All commands run **on the server** over SSH.
 
 ---
 
-## 0. Prerequisites
-
-- A Hetzner server (Ubuntu/Debian) already serving `intranet.groundlinkhandling.pt`
-  over HTTPS via Nginx. (If TLS isn't set up yet, see step 6.)
-- DNS: `intranet.groundlinkhandling.pt` → your server's IP (A/AAAA record).
-- An [Upstash](https://console.upstash.com) Redis database (free) for the user
-  store — copy its **REST URL** and **REST token**.
-- Your Smartsheet API token.
-
-## 1. Install Node.js 20 + git
+## 1. Get the code
 
 ```bash
-sudo apt update
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs git
-node -v   # should print v20.x
-```
-
-## 2. Put the code in /opt/safety
-
-```bash
-sudo mkdir -p /opt/safety
-sudo chown "$USER":"$USER" /opt/safety
+sudo mkdir -p /opt/safety && sudo chown "$USER":"$USER" /opt/safety
 git clone https://github.com/ruibraga83/gkliiisafety.git /opt/safety
 cd /opt/safety
-npm install --omit=dev      # installs express
 ```
 
-Resulting layout:
-
-```
-/opt/safety/
-├── server.js          # Express entry point (serves static + mounts api/*)
-├── index.html         # the dashboard (served at /dashboards/safety/)
-├── logo.png
-├── lib.js             # JWT / KV / auth helpers
-├── api/               # smartsheet, auth, setup, users, attachment-proxy
-├── package.json
-├── node_modules/
-└── .env               # secrets (you create this next — never committed)
-```
-
-## 3. Create the secrets file
+## 2. Create the secrets file
 
 ```bash
-cp .env.example .env
-nano .env
+cat > .env <<EOF
+SMARTSHEET_TOKEN=PASTE_YOUR_SMARTSHEET_TOKEN
+JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))" 2>/dev/null || openssl rand -base64 48)
+EOF
+chmod 600 .env
+cat .env   # check both values are filled in; edit SMARTSHEET_TOKEN if needed
 ```
 
-Fill in (generate the JWT secret with the command in the file):
+`JWT_SECRET` here is the dashboard's **own** login secret (independent of the
+intranet's). `.env` is git-ignored.
 
-```
-SMARTSHEET_TOKEN=...your token...
-JWT_SECRET=...long random string...
-KV_REST_API_URL=https://...upstash.io
-KV_REST_API_TOKEN=...
-PORT=3000
-HOST=127.0.0.1
-```
-
-Lock it down and hand ownership to the service user:
+## 3. Start the container
 
 ```bash
-sudo chown -R www-data:www-data /opt/safety
-sudo chmod 600 /opt/safety/.env
+cd /opt/safety
+docker compose up -d --build
+docker compose ps
+docker compose logs -f safety   # expect: "Safety dashboard listening on http://0.0.0.0:3000"
 ```
 
-## 4. Run it as a service
+This joins the existing external `proxy` network. (If you ever see
+`network proxy declared as external, but could not be found`, the network name
+differs — run `docker network ls` and update `networks.proxy` in
+`docker-compose.yml`.)
+
+## 4. Add the Caddy route
+
+Edit the live Caddyfile and add the safety block to the **intranet** site:
 
 ```bash
-sudo cp deploy/safety-dashboard.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now safety-dashboard
-sudo systemctl status safety-dashboard      # should be active (running)
+sudo nano /opt/caddy/Caddyfile
 ```
 
-Quick local check (still on the server):
+Make the `intranet.groundlinkhandling.pt { ... }` block look like this (the
+first two additions are new — see `deploy/caddy-snippet.txt`):
 
-```bash
-curl http://127.0.0.1:3000/healthz          # {"ok":true}
-curl -I http://127.0.0.1:3000/              # 200, the dashboard HTML
+```caddy
+intranet.groundlinkhandling.pt {
+    redir /dashboards/safety /dashboards/safety/
+
+    handle_path /dashboards/safety/* {
+        reverse_proxy safety:3000
+    }
+
+    handle_path /api/* {
+        reverse_proxy backend:4000
+    }
+    handle {
+        reverse_proxy frontend:80
+    }
+}
 ```
 
-Logs: `journalctl -u safety-dashboard -f`
-
-## 5. Wire up Nginx
-
-Open the vhost for the intranet host:
+Reload Caddy (zero downtime):
 
 ```bash
-sudo nano /etc/nginx/sites-available/intranet.groundlinkhandling.pt   # path may differ
+docker exec caddy-caddy-1 caddy reload --config /etc/caddy/Caddyfile
 ```
 
-Paste the two `location` blocks from
-[`deploy/nginx-intranet.conf`](deploy/nginx-intranet.conf) **inside** that
-host's `server { ... }` (the HTTPS one, listening on 443), then:
+## 5. Verify
 
 ```bash
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-## 6. (Only if the host has no HTTPS yet) issue a certificate
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d intranet.groundlinkhandling.pt
-```
-
-## 7. Verify from your machine
-
-```bash
-# 301 to the trailing slash
+# 308/301 to the trailing slash
 curl -I https://intranet.groundlinkhandling.pt/dashboards/safety
 
-# the dashboard
+# the dashboard HTML
 curl -I https://intranet.groundlinkhandling.pt/dashboards/safety/
 
-# API through the proxy — 401 (not 404/502) means routing + auth both work
+# API through the proxy — 401 (not 404/502) means routing works
 curl -X POST https://intranet.groundlinkhandling.pt/dashboards/safety/api/smartsheet
 ```
 
-Then open `https://intranet.groundlinkhandling.pt/dashboards/safety/` in a
-browser. First visit runs the one-time **setup** screen (creates the first admin
-user in Upstash); after that, log in with username + PIN.
+Open `https://intranet.groundlinkhandling.pt/dashboards/safety/` in a browser.
+First visit shows the one-time **setup** screen (creates the first admin user on
+the `safety_data` volume); after that, log in with username + PIN.
 
-## 8. Link it from the intranet portal
+## 6. Link it from the intranet
 
 ```html
 <a href="https://intranet.groundlinkhandling.pt/dashboards/safety/">Safety Dashboard</a>
 ```
 
-Keep the trailing slash (the 301 covers anyone who drops it).
+Keep the trailing slash (the `redir` covers anyone who drops it).
 
 ---
 
@@ -160,17 +124,20 @@ Keep the trailing slash (the 301 covers anyone who drops it).
 
 ```bash
 cd /opt/safety
-sudo -u www-data git pull
-sudo -u www-data npm install --omit=dev
-sudo systemctl restart safety-dashboard
+git pull
+docker compose up -d --build
 ```
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
+| Symptom | Likely cause / fix |
 |---|---|
-| `502 Bad Gateway` | Node service down — `systemctl status safety-dashboard`, check `journalctl -u safety-dashboard`. |
-| `404` on `/dashboards/safety/api/...` | Nginx `location` blocks not inside the right `server{}`, or missing trailing slash on `proxy_pass`. |
-| Login says "No users configured" | Expected on first run — complete the setup screen. |
-| `503 KV store not configured` | `KV_REST_API_URL` / `KV_REST_API_TOKEN` missing or wrong in `.env`. |
-| Assets/log in but API 401 loops | `JWT_SECRET` changed between requests (must be stable), or clock skew. |
+| `502 Bad Gateway` | `gl_safety` down or not on `proxy` — `docker compose ps`, `docker compose logs safety`. |
+| `404` at `/dashboards/safety/` | Caddy block missing or not reloaded; re-run the `caddy reload`. |
+| "No users configured" on login | Expected on first run — complete the setup screen. |
+| `No storage configured` error | `DATA_DIR` not set — it's baked into the image as `/data`; ensure the `safety_data` volume is mounted. |
+| Login loops / 401 after setup | `JWT_SECRET` changed between restarts — keep it stable in `.env`. |
+
+> The `deploy/nginx-intranet.conf` and `deploy/safety-dashboard.service` files
+> are alternative recipes for a plain-VPS (Nginx + systemd) host. They are **not**
+> used in this Caddy + Docker deployment.

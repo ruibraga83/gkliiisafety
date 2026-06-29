@@ -1,0 +1,30 @@
+# Groundlink III Safety Dashboard — standalone service that joins the existing
+# external "proxy" network so the live Caddy can reach it as  safety:3000.
+#
+# Run from this repo's root (where your .env lives):
+#   docker compose up -d --build
+#
+# The user store persists in the named volume safety_data (/data in-container).
+services:
+  safety:
+    build: .
+    image: gl-safety
+    container_name: gl_safety
+    restart: unless-stopped
+    env_file: .env            # provides SMARTSHEET_TOKEN and JWT_SECRET
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATA_DIR=/data
+    volumes:
+      - safety_data:/data
+    networks:
+      - proxy
+
+volumes:
+  safety_data:
+
+networks:
+  proxy:
+    external: true            # already created; shared with Caddy + gl_frontend

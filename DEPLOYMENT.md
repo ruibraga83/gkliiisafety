@@ -1,5 +1,10 @@
 # Deploying on the GroundLink server (Caddy + Docker)
 
+> **Status: 🟢 LIVE & verified (2026-06-29).** Running as container `gl_safety`,
+> reachable at `https://intranet.groundlinkhandling.pt/dashboards/safety/`.
+> This document is both the original setup procedure and the reference for
+> updates/rebuilds.
+
 Goal: serve the Safety Dashboard at
 **`https://intranet.groundlinkhandling.pt/dashboards/safety/`** on the existing
 server, alongside the current intranet, without touching the running stack.

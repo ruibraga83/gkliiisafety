@@ -211,6 +211,13 @@
     /* Main */
     .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
 
+    .app-footer {
+      flex-shrink:0; padding:.6rem 1.5rem; text-align:center;
+      font-size:.7rem; color:var(--text-muted);
+      border-top:1px solid var(--border); background:var(--surface);
+    }
+    .app-footer .footer-brand { color:var(--primary); font-weight:700; letter-spacing:.02em; }
+
     .topbar {
       background:var(--surface); border-bottom:1px solid var(--border);
       padding:0 1.5rem; height:var(--topbar-h);
@@ -1218,6 +1225,10 @@
       </div><!-- /page-users -->
 
     </div><!-- /content -->
+
+    <footer class="app-footer">
+      &copy; 2026 Groundlink III Handling &middot; Developed by <span class="footer-brand">lIqUiDuS</span>
+    </footer>
   </div><!-- /main -->
 </div><!-- /app -->
 

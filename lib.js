@@ -30,9 +30,10 @@ function verifyJWT(token) {
 }
 
 // ── Storage ───────────────────────────────────────────────────────────────────
-// Two backends, chosen at runtime:
+// Backend chosen at runtime, in priority order:
 //   • REDIS_URL set        → local/self-hosted Redis (uses the `redis` package)
 //   • KV_REST_API_URL set  → Upstash/Vercel KV REST (no package needed)
+//   • DATA_DIR set         → JSON file store on disk (zero dependencies)
 // Keys are namespaced under "gl3:" so this can share a Redis instance safely.
 function nsKey(key) { return key.startsWith('gl3:') ? key : `gl3:${key}`; }
 
@@ -48,11 +49,39 @@ function getRedis() {
   return _redis;
 }
 
+// -- File store (used when no Redis/Upstash; persists on a mounted volume) --
+function fileStorePath() {
+  if (!process.env.DATA_DIR) return null;
+  return require('path').join(process.env.DATA_DIR, 'gl3-store.json');
+}
+let _writeChain = Promise.resolve(); // serialise writes to avoid lost updates
+async function fileReadAll(p) {
+  const fs = require('fs/promises');
+  try { return JSON.parse(await fs.readFile(p, 'utf8')); }
+  catch (e) { if (e.code === 'ENOENT') return {}; throw e; }
+}
+async function fileGet(p, key) {
+  const all = await fileReadAll(p);
+  return key in all ? all[key] : null;
+}
+function fileSet(p, key, value) {
+  // queue behind any in-flight write; atomic temp-file rename
+  _writeChain = _writeChain.then(async () => {
+    const fs = require('fs/promises');
+    const all = await fileReadAll(p);
+    all[key] = value;
+    const tmp = `${p}.${process.pid}.tmp`;
+    await fs.writeFile(tmp, JSON.stringify(all));
+    await fs.rename(tmp, p);
+  });
+  return _writeChain;
+}
+
 // -- Upstash REST (fallback) --
 async function kvOp(commands) {
   const url   = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) throw new Error('No storage configured: set REDIS_URL or KV_REST_API_URL.');
+  if (!url || !token) throw new Error('No storage configured: set REDIS_URL, KV_REST_API_URL, or DATA_DIR.');
   const res = await fetch(`${url}/pipeline`, {
     method:  'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -69,6 +98,8 @@ async function kvGet(key) {
     const val = await r.get(nsKey(key));
     return val ? JSON.parse(val) : null;
   }
+  const fp = fileStorePath();
+  if (fp && !process.env.KV_REST_API_URL) return fileGet(fp, nsKey(key));
   const results = await kvOp([['GET', key]]);
   const val = results?.[0]?.result;
   return val ? JSON.parse(val) : null;
@@ -81,6 +112,8 @@ async function kvSet(key, value) {
     await r.set(nsKey(key), JSON.stringify(value));
     return;
   }
+  const fp = fileStorePath();
+  if (fp && !process.env.KV_REST_API_URL) return fileSet(fp, nsKey(key), value);
   await kvOp([['SET', key, JSON.stringify(value)]]);
 }
 

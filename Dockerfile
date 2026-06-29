@@ -14,6 +14,9 @@ COPY . .
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
+# User store persists here; mount a volume at /data to keep it across rebuilds.
+ENV DATA_DIR=/data
+RUN mkdir -p /data
 
 EXPOSE 3000
 CMD ["node", "server.js"]

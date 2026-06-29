@@ -2,3 +2,9 @@
 .env
 .env*.local
 node_modules
+
+# graphify: keep graph outputs, ignore local cache/manifest
+graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/cost.json
+.graphify_python

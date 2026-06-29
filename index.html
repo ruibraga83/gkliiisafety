@@ -2,9 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <script>
+    // Derive the app's base path so the dashboard works at the domain root
+    // (https://host/) OR under a subpath (https://host/dashboards/safety/).
+    // All relative URLs below (logo, /api/* calls) resolve against this base.
+    (function () {
+      var p = location.pathname;
+      if (!/\/$/.test(p)) p = p.slice(0, p.lastIndexOf('/') + 1);
+      document.write('<base href="' + p + '">');
+    })();
+  </script>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Groundlink III — Safety Dashboard</title>
-  <link rel="icon" type="image/png" href="/logo.png"/>
+  <link rel="icon" type="image/png" href="logo.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -621,7 +631,7 @@
 <!-- Splash -->
 <div id="splash">
   <div class="splash-glass">
-    <img src="/logo.png" alt="Groundlink III" class="splash-logo" onerror="this.style.display='none'"/>
+    <img src="logo.png" alt="Groundlink III" class="splash-logo" onerror="this.style.display='none'"/>
     <div class="splash-title">
       Groundlink III
       <span>Safety Dashboard</span>
@@ -744,7 +754,7 @@
   <aside class="sidebar">
     <div class="sb-head">
       <div class="sb-logo-wrap">
-        <img src="/logo.png" alt="GL3" onerror="this.style.display='none'"/>
+        <img src="logo.png" alt="GL3" onerror="this.style.display='none'"/>
       </div>
       <div class="sb-head-text">
         <strong>Groundlink III</strong>
@@ -1235,10 +1245,10 @@
 // 1. CONFIG & STATE
 // ═══════════════════════════════════════════════════════════════
 const CFG = {
-  endpoint:      '/api/smartsheet',
-  authEndpoint:  '/api/auth',
-  setupEndpoint: '/api/setup',
-  usersEndpoint: '/api/users',
+  endpoint:      'api/smartsheet',
+  authEndpoint:  'api/auth',
+  setupEndpoint: 'api/setup',
+  usersEndpoint: 'api/users',
   airports: [
     { name:'Lisbon',        code:'LIS', sheetId:'8492262887477124' },
     { name:'Porto',         code:'OPO', sheetId:'2522203786530692' },

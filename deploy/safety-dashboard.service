@@ -1,0 +1,33 @@
+# systemd unit for the Groundlink III Safety Dashboard (self-hosted on Hetzner)
+# Install:
+#   sudo cp deploy/safety-dashboard.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now safety-dashboard
+# Logs:
+#   journalctl -u safety-dashboard -f
+
+[Unit]
+Description=Groundlink III Safety Dashboard (Node/Express)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/safety
+# Secrets live here as plain KEY=value lines (chmod 600, owned by www-data):
+EnvironmentFile=/opt/safety/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOST=127.0.0.1
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+
+# Light hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
